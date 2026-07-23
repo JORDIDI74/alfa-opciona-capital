@@ -1422,17 +1422,26 @@ function flujoCompra(){
   if(!ticker){ tradeError.textContent="Escribe el ticker del valor (ej. AMZN)."; return; }
   if(!esNum(imp)||imp<=0){ tradeError.textContent="Escribe el importe: cuánto quieres invertir en euros."; return; }
   if(imp>USER.caja+0.5){ tradeError.textContent="No tienes caja suficiente (te quedan "+fmtEUR(Math.round(USER.caja))+")."; return; }
-  if(USER.posiciones.length>=JUEGO.maxPosiciones){ tradeError.textContent="Cartera llena: máximo 10 valores."; return; }
-  if(USER.posiciones.some(function(p){ return p.ticker===ticker; })){ tradeError.textContent="Ya tienes "+ticker+" en cartera."; return; }
+  /* Ampliar una posición que ya tienes NO ocupa un hueco nuevo: el tope de 10 solo aplica a valores nuevos. */
+  var yaLaTengo=USER.posiciones.some(function(p){ return p.ticker===ticker; });
+  if(!yaLaTengo && USER.posiciones.length>=JUEGO.maxPosiciones){ tradeError.textContent="Cartera llena: máximo 10 valores. Puedes ampliar uno que ya tengas."; return; }
   tradeError.textContent="";
   ocupado(true,"Consultando precio real de "+ticker+"…");
   cotizacionReal(ticker).then(function(c){
     var nombre=(document.getElementById("f-nombre").value||"").trim();
     cotPendiente={cot:c, importe:imp, ticker:ticker, nombre:nombre};
     var tit=imp/c.precioEUR;
-    pintaCot(c,"Comprarás <b>"+tit.toLocaleString("es-ES",{maximumFractionDigits:2})+"</b> títulos por "+fmtEUR(Math.round(imp)));
+    var prev=USER.posiciones.filter(function(p){ return p.ticker===ticker; })[0];
+    var extra="Comprarás <b>"+tit.toLocaleString("es-ES",{maximumFractionDigits:2})+"</b> títulos por "+fmtEUR(Math.round(imp));
+    if(prev){
+      var nuevosTit=(esNum(prev.titulos)?prev.titulos:0)+tit;
+      var nuevoCoste=(esNum(prev.costeEUR)?prev.costeEUR:0)+imp;
+      extra="<b>Amplías tu posición en "+esc(ticker)+".</b><br>"+extra+
+        "<br>Pasarás de "+fmtTitulos(prev.titulos)+" a <b>"+nuevosTit.toLocaleString("es-ES",{maximumFractionDigits:2})+"</b> títulos · precio medio <b>"+fmtPrecio(nuevoCoste/nuevosTit)+"</b>";
+    }
+    pintaCot(c,extra);
     ocupado(false);
-    tradeConfirmar.textContent="Confirmar compra a "+fmtPrecio(c.precioEUR);
+    tradeConfirmar.textContent=(prev?"Confirmar ampliación a ":"Confirmar compra a ")+fmtPrecio(c.precioEUR);
   }).catch(function(){
     ocupado(false); tradeCot.innerHTML="";
     tradeError.textContent="No he podido consultar el precio real de "+ticker+". Comprueba el ticker o inténtalo en un momento.";
@@ -1444,12 +1453,28 @@ function ejecutarCompra(){
   if(!esNum(pr)||pr<=0){ tradeError.textContent="Precio no disponible."; return; }
   if(imp>USER.caja+0.5){ tradeError.textContent="No tienes caja suficiente."; return; }
   var titulos=imp/pr;
-  USER.posiciones.push({ ticker:d.ticker, nombre:d.nombre||d.cot.nombre||"", titulos:titulos,
-    precioCompraEUR:pr, costeEUR:imp, precioActual:pr, fechaPrecio:fechaCorta(hoyISO()),
-    moneda:d.cot.moneda, precioCompraOrig:d.cot.precioOrig, precioActualOrig:d.cot.precioOrig });
+  var prev=USER.posiciones.filter(function(p){ return p.ticker===d.ticker; })[0];
+  if(prev){
+    /* Ampliación: se acumula en la misma posición con precio medio ponderado. */
+    var titAnt=esNum(prev.titulos)?prev.titulos:0;
+    var costeAnt=esNum(prev.costeEUR)?prev.costeEUR:0;
+    var origAnt=esNum(prev.precioCompraOrig)?prev.precioCompraOrig:null;
+    prev.titulos=titAnt+titulos;
+    prev.costeEUR=costeAnt+imp;
+    prev.precioCompraEUR=prev.costeEUR/prev.titulos;
+    if(origAnt!=null && esNum(d.cot.precioOrig)) prev.precioCompraOrig=(origAnt*titAnt+d.cot.precioOrig*titulos)/prev.titulos;
+    else if(esNum(d.cot.precioOrig)) prev.precioCompraOrig=d.cot.precioOrig;
+    prev.precioActual=pr; prev.precioActualOrig=d.cot.precioOrig;
+    prev.moneda=d.cot.moneda; prev.fechaPrecio=fechaCorta(hoyISO());
+    if(!prev.nombre) prev.nombre=d.nombre||d.cot.nombre||"";
+  } else {
+    USER.posiciones.push({ ticker:d.ticker, nombre:d.nombre||d.cot.nombre||"", titulos:titulos,
+      precioCompraEUR:pr, costeEUR:imp, precioActual:pr, fechaPrecio:fechaCorta(hoyISO()),
+      moneda:d.cot.moneda, precioCompraOrig:d.cot.precioOrig, precioActualOrig:d.cot.precioOrig });
+  }
   USER.caja-=imp;
   USER.movimientos.push({ fecha:hoyISO(), tipo:"compra", ticker:d.ticker, titulos:titulos, precioEUR:pr, importeEUR:imp,
-    motivo:"Compra al precio real de mercado." });
+    motivo:(prev?"Ampliación de posición al precio real de mercado.":"Compra al precio real de mercado.") });
   guardarUsuario(); cerrarTrade(); carteraSel="user"; pintarTodo();
 }
 function flujoVenta(){
