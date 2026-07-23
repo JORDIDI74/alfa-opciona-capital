@@ -366,6 +366,17 @@ footer{
   padding:15px; border-radius:16px; min-height:52px;
 }
 .btn-añadir:disabled{opacity:.5; border-style:solid; border-color:var(--line-strong); color:var(--ink-3); cursor:not-allowed}
+.panel-jugador{
+  display:flex; flex-direction:column; gap:12px; margin-bottom:16px;
+  padding:16px; border-radius:var(--r);
+  background:var(--surface); border:1px solid var(--jcolor,var(--accent));
+  box-shadow:var(--shadow);
+}
+.panel-jugador .pj-quien{font-size:14px; color:var(--ink-2)}
+.panel-jugador .pj-quien b{color:var(--ink); font-size:15px}
+.panel-jugador .pj-acciones{display:flex; gap:10px; flex-wrap:wrap}
+.panel-jugador .pj-acciones .btn-primario{flex:2; min-width:170px; width:auto}
+.panel-jugador .pj-acciones .btn-secundario{flex:1; min-width:130px}
 .pos-acciones{display:flex; gap:8px; margin-top:10px; flex-wrap:wrap}
 .pos-acciones button{flex:1; min-width:120px}
 
@@ -426,6 +437,8 @@ footer{
     <p class="eyebrow" id="eyebrow-temporada">Temporada 2026–27 · Mes 0 de 12</p>
     <h1 class="titulo" id="titulo-clasificacion">Parrilla de salida</h1>
     <p class="sub" id="sub-clasificacion">Tres carteras, un método, doce meses. Cada jugador arranca con 500.000&nbsp;€ y un máximo de 10 valores.</p>
+
+    <div id="accion-jugador"><!-- JS: barra "juegas como…" con Comprar / Cambiar --></div>
 
     <div class="stack" id="lista-jugadores"><!-- JS --></div>
 
@@ -1161,6 +1174,20 @@ function pintarTodo(){
     ? "Valor total actual de cada cartera (posiciones + caja). Gana quien más lejos llegue en doce meses."
     : "Tres carteras, un método, doce meses. Cada jugador arranca con 500.000 € y puede tener, como mucho, 10 valores.";
 
+  /* barra de acción del jugador humano: quién juega + comprar + cambiar */
+  var accion=document.getElementById("accion-jugador");
+  if(USER){
+    var vU=valorJugador(USER);
+    accion.innerHTML='<div class="panel-jugador" style="--jcolor:var(--c-jorge)">'+
+      '<div class="pj-quien">Juegas como <b>'+esc(USER.nombre)+'</b> · '+fmtEUR(Math.round(vU.total))+' · '+(USER.posiciones||[]).length+'/'+JUEGO.maxPosiciones+' valores</div>'+
+      '<div class="pj-acciones">'+
+        '<button class="btn-primario" id="cta-comprar">＋ Comprar un valor</button>'+
+        '<button class="btn-secundario" id="cta-cambiar">Cambiar jugador</button>'+
+      '</div></div>';
+    document.getElementById("cta-comprar").addEventListener("click",function(){ irACarteras(); abrirTrade("comprar",null); });
+    document.getElementById("cta-cambiar").addEventListener("click",cambiarJugador);
+  } else { accion.innerHTML=""; }
+
   /* clasificación */
   var lista=document.getElementById("lista-jugadores"); lista.innerHTML="";
   var resumen=JUGADORES.map(function(j){ var v=valorJugador(j); return {j:j,total:v.total,invertido:v.invertido,pendiente:v.pendiente}; });
@@ -1328,11 +1355,25 @@ function confirmarActualizar(){
   guardarUsuario(); cerrarTrade(); carteraSel="user"; pintarTodo();
 }
 tradeConfirmar.addEventListener("click",function(){ if(tradeAccion==="comprar") confirmarCompra(); else if(tradeAccion==="vender") confirmarVenta(); else confirmarActualizar(); });
+function activarPanel(panelId){
+  var tabs=document.querySelectorAll(".tabbar button");
+  Array.prototype.forEach.call(tabs,function(x){ x.setAttribute("aria-selected", x.dataset.panel===panelId ? "true":"false"); });
+  Array.prototype.forEach.call(document.querySelectorAll(".panel"),function(p){ p.classList.toggle("activo", p.id===panelId); });
+  window.scrollTo(0,0);
+}
+function irACarteras(){ activarPanel("panel-carteras"); carteraSel="user"; pintarCartera("user"); }
+function volverAOnboarding(){
+  try{ localStorage.removeItem(LS_KEY); }catch(e){}
+  USER=null; carteraSel=null; cerrarTrade(); pintarTodo(); activarPanel("panel-clasificacion"); ovOnb.hidden=false;
+  setTimeout(function(){ try{ inpNombre.value=""; inpNombre.focus(); }catch(e){} },60);
+}
 function reiniciarPartida(){
   if(!window.confirm("¿Reiniciar tu partida? Se borran tus valores y tu caja vuelve a 500.000 €.")) return;
-  try{ localStorage.removeItem(LS_KEY); }catch(e){}
-  USER=null; carteraSel=null; cerrarTrade(); pintarTodo(); ovOnb.hidden=false;
-  setTimeout(function(){ try{ inpNombre.value=""; inpNombre.focus(); }catch(e){} },60);
+  volverAOnboarding();
+}
+function cambiarJugador(){
+  if(!window.confirm("¿Empezar de nuevo con otro nombre? Se borra la partida actual"+(USER&&USER.nombre?(" de "+USER.nombre):"")+".")) return;
+  volverAOnboarding();
 }
 
 /* ====== init ====== */
