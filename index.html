@@ -1,0 +1,1345 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark light">
+<title>ALFA OPCIONA CAPITAL</title>
+<style>
+/* ---------- Tokens ---------- */
+:root{
+  color-scheme: dark;
+  --bg:#161411;
+  --surface:#211d18;
+  --surface-2:#2b261f;
+  --ink:#f2ecdf;
+  --ink-2:#b9ae97;
+  --ink-3:#9a8f77;
+  --line:rgba(242,236,223,.09);
+  --line-strong:rgba(242,236,223,.18);
+  --accent:#b08d57;
+  --accent-2:#d3b078;
+  --accent-text:#d3b078;
+  --accent-ink:#171310;
+  --up:#3dc98a;
+  --up-bg:rgba(61,201,138,.13);
+  --down:#e2705c;
+  --down-bg:rgba(226,112,92,.13);
+  --c-tesis:#b8860b;
+  --c-claude:#3987e5;
+  --c-jorge:#1baf7a;
+  --glass:rgba(22,20,17,.72);
+  --shadow:0 10px 30px rgba(0,0,0,.35);
+  --font-ui:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --font-display:ui-serif,"New York",Georgia,"Iowan Old Style","Times New Roman",serif;
+  --r:20px;
+}
+@media (prefers-color-scheme: light){
+  :root:where(:not([data-theme="dark"])){
+    color-scheme: light;
+    --bg:#f5f1e8;
+    --surface:#fdfbf4;
+    --surface-2:#ede7d8;
+    --ink:#241f16;
+    --ink-2:#6d6250;
+    --ink-3:#706550;
+    --line:rgba(36,31,22,.10);
+    --line-strong:rgba(36,31,22,.20);
+    --accent:#8f6b33;
+    --accent-2:#b08d57;
+    --accent-text:#7a5a28;
+    --accent-ink:#fdfbf4;
+    --up:#177a4c;
+    --up-bg:rgba(23,122,76,.10);
+    --down:#b8452f;
+    --down-bg:rgba(184,69,47,.10);
+    --c-tesis:#9a6b16;
+    --c-claude:#2a78d6;
+    --c-jorge:#147a56;
+    --glass:rgba(245,241,232,.78);
+    --shadow:0 10px 30px rgba(60,50,30,.12);
+  }
+}
+:root[data-theme="light"]{
+  color-scheme: light;
+  --bg:#f5f1e8; --surface:#fdfbf4; --surface-2:#ede7d8;
+  --ink:#241f16; --ink-2:#6d6250; --ink-3:#706550;
+  --line:rgba(36,31,22,.10); --line-strong:rgba(36,31,22,.20);
+  --accent:#8f6b33; --accent-2:#b08d57; --accent-text:#7a5a28; --accent-ink:#fdfbf4;
+  --up:#177a4c; --up-bg:rgba(23,122,76,.10);
+  --down:#b8452f; --down-bg:rgba(184,69,47,.10);
+  --c-tesis:#9a6b16; --c-claude:#2a78d6; --c-jorge:#147a56;
+  --glass:rgba(245,241,232,.78); --shadow:0 10px 30px rgba(60,50,30,.12);
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --bg:#161411; --surface:#211d18; --surface-2:#2b261f;
+  --ink:#f2ecdf; --ink-2:#b9ae97; --ink-3:#9a8f77;
+  --line:rgba(242,236,223,.09); --line-strong:rgba(242,236,223,.18);
+  --accent:#b08d57; --accent-2:#d3b078; --accent-text:#d3b078; --accent-ink:#171310;
+  --up:#3dc98a; --up-bg:rgba(61,201,138,.13);
+  --down:#e2705c; --down-bg:rgba(226,112,92,.13);
+  --c-tesis:#b8860b; --c-claude:#3987e5; --c-jorge:#1baf7a;
+  --glass:rgba(22,20,17,.72); --shadow:0 10px 30px rgba(0,0,0,.35);
+}
+
+/* ---------- Base ---------- */
+*{box-sizing:border-box; margin:0; padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:var(--font-ui);
+  background:var(--bg);
+  color:var(--ink);
+  font-size:16px; line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  -webkit-tap-highlight-color:transparent;
+}
+button{font:inherit; color:inherit; background:none; border:0; cursor:pointer}
+:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:6px}
+h1,h2,h3{text-wrap:balance}
+.num{font-variant-numeric:tabular-nums}
+
+/* ---------- Header ---------- */
+.top{
+  position:sticky; top:0; z-index:40;
+  padding:calc(10px + env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) 10px max(20px, env(safe-area-inset-left));
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  background:var(--glass);
+  -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px);
+  border-bottom:1px solid var(--line);
+}
+.wordmark{
+  font-family:var(--font-display);
+  font-size:13px; letter-spacing:.18em; font-weight:600;
+  text-transform:uppercase; white-space:nowrap;
+  min-width:0; overflow:hidden;
+}
+.wordmark em{font-style:normal; color:var(--accent-2)}
+.estado-pill{
+  font-size:10px; font-weight:600; letter-spacing:.06em; text-transform:uppercase;
+  color:var(--accent-text); border:1px solid var(--accent);
+  padding:3px 9px; border-radius:999px; white-space:nowrap; flex:none;
+}
+@media (max-width:389px){
+  .wordmark{font-size:11.5px; letter-spacing:.13em}
+}
+
+/* ---------- Layout ---------- */
+main{max-width:680px; margin:0 auto; padding:20px 16px calc(96px + env(safe-area-inset-bottom))}
+.panel{display:none}
+.panel.activo{display:block; animation:aparecer .35s ease both}
+@keyframes aparecer{from{opacity:0; transform:translateY(8px)} to{opacity:1; transform:none}}
+
+.eyebrow{
+  font-size:11px; font-weight:700; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--accent-text); margin-bottom:6px;
+}
+.titulo{
+  font-family:var(--font-display); font-weight:600;
+  font-size:30px; line-height:1.15; margin-bottom:6px;
+}
+.sub{color:var(--ink-2); font-size:15px; max-width:46ch; margin-bottom:20px}
+
+.card{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:var(--r);
+  padding:18px;
+  box-shadow:var(--shadow);
+}
+.stack{display:flex; flex-direction:column; gap:14px}
+
+/* ---------- Clasificación ---------- */
+.jcard{display:flex; flex-direction:column; gap:12px; animation:aparecer .45s ease both}
+.jcard:nth-child(2){animation-delay:.06s}
+.jcard:nth-child(3){animation-delay:.12s}
+.jfila{display:flex; align-items:center; gap:12px}
+.avatar{
+  width:44px; height:44px; border-radius:50%; flex:none;
+  display:grid; place-items:center;
+  font-family:var(--font-display); font-size:19px; font-weight:700;
+  color:var(--ink);
+  background:var(--surface-2);
+  border:2px solid var(--jcolor,var(--accent));
+}
+.jinfo{min-width:0; flex:1}
+.jnombre{font-size:17px; font-weight:700; display:flex; align-items:center; gap:8px; flex-wrap:wrap}
+.alias{
+  font-size:10px; font-weight:700; letter-spacing:.1em;
+  color:var(--ink-2); border:1px solid var(--line-strong);
+  padding:2px 7px; border-radius:999px;
+}
+.jdesc{font-size:13px; color:var(--ink-2)}
+.rango{
+  font-family:var(--font-display); font-size:15px; color:var(--ink-3);
+  flex:none; width:34px; text-align:center;
+}
+.jvalor{
+  font-family:var(--font-display); font-weight:600;
+  font-size:32px; line-height:1.1; letter-spacing:.01em;
+}
+.chips{display:flex; gap:8px; flex-wrap:wrap}
+.chip{
+  font-size:12px; font-weight:600; padding:4px 10px; border-radius:999px;
+  background:var(--surface-2); color:var(--ink-2);
+}
+.chip.up{background:var(--up-bg); color:var(--up)}
+.chip.down{background:var(--down-bg); color:var(--down)}
+
+/* ---------- Gráfico ---------- */
+.chart-head{display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:8px}
+.chart-tit{font-size:16px; font-weight:700}
+.chart-sub{font-size:12.5px; color:var(--ink-2)}
+.btn-mini{
+  font-size:12px; font-weight:600; color:var(--accent-text);
+  border:1px solid var(--accent); border-radius:999px;
+  padding:10px 14px; min-height:44px; flex:none; margin:-6px 0;
+}
+.btn-mini[aria-expanded="true"]{background:var(--accent); color:var(--accent-ink); border-color:var(--accent)}
+.chart-wrap{position:relative}
+.chart-wrap svg{display:block; width:100%; height:auto; touch-action:pan-y}
+.leyenda{display:flex; gap:14px; flex-wrap:wrap; margin-top:10px}
+.leyenda span{display:inline-flex; align-items:center; gap:6px; font-size:12.5px; color:var(--ink-2)}
+.punto{width:9px; height:9px; border-radius:50%; display:inline-block; background:var(--pc)}
+.tooltip{
+  position:absolute; pointer-events:none; display:none;
+  background:var(--surface-2); border:1px solid var(--line-strong);
+  border-radius:12px; padding:8px 11px; font-size:12.5px; box-shadow:var(--shadow);
+  min-width:150px; z-index:5;
+}
+.tooltip .tt-mes{font-weight:700; margin-bottom:4px}
+.tooltip .tt-fila{display:flex; align-items:center; gap:6px; justify-content:space-between}
+.tooltip .tt-fila b{font-weight:600}
+.nota-chart{font-size:12.5px; color:var(--ink-3); margin-top:10px}
+#tabla-wrap{overflow-x:auto; -webkit-overflow-scrolling:touch}
+.tabla-datos{width:100%; border-collapse:collapse; font-size:13.5px; margin-top:4px}
+.tabla-datos th,.tabla-datos td{padding:8px 6px; text-align:right; border-bottom:1px solid var(--line); white-space:nowrap}
+.tabla-datos th:first-child,.tabla-datos td:first-child{text-align:left}
+.tabla-datos th{font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--ink-3)}
+[hidden]{display:none !important}
+
+/* ---------- Carteras ---------- */
+.seg{
+  display:grid; grid-template-columns:repeat(3,1fr); gap:4px;
+  background:var(--surface-2); border-radius:14px; padding:4px; margin-bottom:16px;
+}
+.seg button{
+  padding:12px 4px; min-height:44px; border-radius:11px; font-size:13.5px; font-weight:600;
+  color:var(--ink-2); transition:background .2s,color .2s;
+}
+.seg button[aria-selected="true"]{background:var(--surface); color:var(--ink); box-shadow:var(--shadow)}
+.stats{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:14px 0}
+.stat{background:var(--surface-2); border-radius:14px; padding:12px}
+.stat .k{font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-3); font-weight:700}
+.stat .v{font-family:var(--font-display); font-size:22px; font-weight:600; margin-top:2px}
+.barra{
+  display:flex; gap:2px; height:12px; border-radius:8px; overflow:hidden;
+  background:var(--surface-2); margin:6px 0 4px;
+}
+.barra i{display:block; height:100%}
+.barra-leyenda{font-size:12px; color:var(--ink-3)}
+.vacio{
+  border:1.5px dashed var(--line-strong); border-radius:var(--r);
+  padding:22px 18px; text-align:center; color:var(--ink-2); font-size:14px;
+}
+.vacio b{color:var(--ink)}
+.pos{display:flex; flex-direction:column; gap:8px}
+.pos-cab{display:flex; justify-content:space-between; gap:10px; align-items:baseline}
+.pos-ticker{font-weight:800; font-size:15px; letter-spacing:.03em}
+.pos-nombre{color:var(--ink-2); font-size:13px}
+.pos-datos{display:flex; gap:14px; flex-wrap:wrap; font-size:13px; color:var(--ink-2)}
+
+/* ---------- Método ---------- */
+.paso{position:relative; padding-left:24px}
+.paso::before{
+  content:""; position:absolute; left:7px; top:34px; bottom:-16px;
+  width:2px; background:var(--line-strong);
+}
+.paso:last-child::before{display:none}
+.paso-num{
+  position:absolute; left:0; top:6px;
+  width:16px; height:16px; border-radius:50%;
+  background:var(--accent); border:3px solid var(--bg);
+  box-shadow:0 0 0 1.5px var(--accent);
+}
+.paso .card{margin-bottom:16px}
+.paso-skill{
+  display:inline-block; font-size:11px; font-weight:700; letter-spacing:.06em;
+  color:var(--accent-text); background:var(--surface-2);
+  padding:3px 9px; border-radius:7px; margin-bottom:8px;
+}
+.paso h3{font-size:17px; margin-bottom:4px}
+.paso p{font-size:14px; color:var(--ink-2)}
+.corte{
+  display:flex; align-items:center; gap:10px; margin:14px 0 4px;
+  font-size:12px; font-weight:800; letter-spacing:.12em; color:var(--accent-text);
+  text-transform:uppercase;
+}
+.corte::before,.corte::after{content:""; height:1px; background:var(--line-strong); flex:1}
+.pesos{display:flex; gap:2px; height:12px; border-radius:8px; overflow:hidden; margin:10px 0 6px}
+.pesos i{height:100%}
+.pesos-ley{display:flex; gap:12px; flex-wrap:wrap; font-size:12px; color:var(--ink-2)}
+.pesos-ley b{color:var(--ink)}
+details{margin-top:10px; border-top:1px solid var(--line); padding-top:10px}
+summary{
+  cursor:pointer; font-size:13.5px; font-weight:700; color:var(--accent-text);
+  list-style:none; display:flex; align-items:center; gap:6px;
+  min-height:44px; padding:6px 0;
+}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+"; font-size:16px; margin-left:auto; color:var(--ink-3)}
+details[open] summary::after{content:"–"}
+details ul{margin:10px 0 4px 18px; font-size:13.5px; color:var(--ink-2); display:flex; flex-direction:column; gap:6px}
+details li b{color:var(--ink); font-weight:600}
+.semaforo{display:flex; flex-direction:column; gap:8px; margin-top:10px}
+.sem{display:flex; align-items:center; gap:10px; font-size:13.5px; color:var(--ink-2)}
+.sem i{width:10px; height:10px; border-radius:50%; flex:none}
+.sem b{color:var(--ink); font-variant-numeric:tabular-nums}
+
+/* ---------- Diario ---------- */
+.mov{display:flex; gap:12px; align-items:flex-start}
+.mov-fecha{flex:none; width:52px; text-align:center; font-size:12px; color:var(--ink-3); font-weight:700}
+.mov-cuerpo{flex:1; font-size:14px}
+.mov-tipo{font-weight:700}
+
+/* ---------- Reglas ---------- */
+.regla-lista{display:flex; flex-direction:column; gap:12px}
+.regla{display:flex; gap:12px; align-items:flex-start; font-size:14px; color:var(--ink-2)}
+.regla b{color:var(--ink)}
+.regla .icono{flex:none; width:30px; height:30px; border-radius:9px; display:grid; place-items:center;
+  background:var(--surface-2); color:var(--accent-2); font-weight:800; font-size:14px}
+.jugador-mini{display:flex; gap:12px; align-items:center}
+.jugador-mini .avatar{width:38px; height:38px; font-size:16px}
+.jugador-mini .t{font-size:14.5px}
+.jugador-mini .t b{display:block; font-size:15px}
+.jugador-mini .t span{color:var(--ink-2); font-size:13px}
+
+/* ---------- Tab bar ---------- */
+.tabbar{
+  position:fixed; left:0; right:0; bottom:0; z-index:50;
+  display:grid; grid-template-columns:repeat(5,1fr);
+  padding:8px max(6px, env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(6px, env(safe-area-inset-left));
+  background:var(--glass);
+  -webkit-backdrop-filter:blur(18px); backdrop-filter:blur(18px);
+  border-top:1px solid var(--line);
+}
+.tabbar button{
+  display:flex; flex-direction:column; align-items:center; gap:3px;
+  font-size:10px; font-weight:600; letter-spacing:.02em;
+  color:var(--ink-3); padding:4px 0; border-radius:12px;
+}
+.tabbar button svg{width:23px; height:23px}
+.tabbar button[aria-selected="true"]{color:var(--accent-text)}
+
+footer{
+  max-width:680px; margin:0 auto;
+  padding:0 20px calc(110px + env(safe-area-inset-bottom));
+  text-align:center; font-size:12px; color:var(--ink-3); line-height:1.7;
+}
+
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation:none !important; transition:none !important}
+}
+@media (min-width:520px){
+  .titulo{font-size:36px}
+  .stats{grid-template-columns:repeat(4,1fr)}
+}
+
+/* ---------- Botones ---------- */
+.btn-primario{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  background:var(--accent); color:var(--accent-ink);
+  font-size:15px; font-weight:700; padding:14px 20px; border-radius:14px;
+  min-height:48px; width:100%;
+}
+.btn-primario:disabled{opacity:.45; cursor:not-allowed}
+.btn-secundario{
+  display:inline-flex; align-items:center; justify-content:center; gap:6px;
+  border:1px solid var(--line-strong); color:var(--ink);
+  font-size:14px; font-weight:600; padding:11px 16px; border-radius:12px; min-height:44px;
+}
+.btn-peligro{color:var(--down); font-size:13px; font-weight:600; padding:10px 14px; min-height:44px}
+.btn-añadir{
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  width:100%; margin-top:14px; border:1.5px dashed var(--accent);
+  color:var(--accent-text); font-size:15px; font-weight:700;
+  padding:15px; border-radius:16px; min-height:52px;
+}
+.btn-añadir:disabled{opacity:.5; border-style:solid; border-color:var(--line-strong); color:var(--ink-3); cursor:not-allowed}
+.pos-acciones{display:flex; gap:8px; margin-top:10px; flex-wrap:wrap}
+.pos-acciones button{flex:1; min-width:120px}
+
+/* ---------- Overlay / modal ---------- */
+.overlay{
+  position:fixed; inset:0; z-index:100;
+  display:flex; align-items:flex-end; justify-content:center;
+  background:rgba(0,0,0,.55); -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
+  padding:0;
+}
+.overlay[hidden]{display:none !important}
+.modal{
+  width:100%; max-width:520px;
+  background:var(--surface); border:1px solid var(--line-strong);
+  border-radius:24px 24px 0 0; box-shadow:var(--shadow);
+  padding:24px 20px calc(24px + env(safe-area-inset-bottom));
+  max-height:92vh; overflow-y:auto; animation:subir .3s ease both;
+}
+@keyframes subir{from{transform:translateY(24px); opacity:0} to{transform:none; opacity:1}}
+@media (min-width:520px){
+  .overlay{align-items:center}
+  .modal{border-radius:24px; padding-bottom:24px}
+}
+.modal-eyebrow{font-size:11px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--accent-text); margin-bottom:6px}
+.modal h2{font-family:var(--font-display); font-weight:600; font-size:24px; margin-bottom:6px}
+.modal .intro{color:var(--ink-2); font-size:14px; margin-bottom:18px}
+.campo{display:flex; flex-direction:column; gap:6px; margin-bottom:14px}
+.campo label{font-size:12px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--ink-3)}
+.campo input{
+  font:inherit; font-size:16px; color:var(--ink);
+  background:var(--surface-2); border:1px solid var(--line-strong);
+  border-radius:12px; padding:13px 14px; width:100%; min-height:48px;
+}
+.campo input::placeholder{color:var(--ink-3)}
+.campo .ayuda{font-size:12.5px; color:var(--ink-3)}
+.campo .ayuda b{color:var(--ink-2)}
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+.modal-error{color:var(--down); font-size:13px; font-weight:600; margin:-4px 0 12px; min-height:0}
+.modal-acciones{display:flex; flex-direction:column; gap:10px; margin-top:6px}
+.cerrar-modal{
+  position:absolute; top:14px; right:16px; width:36px; height:36px; border-radius:50%;
+  display:grid; place-items:center; background:var(--surface-2); color:var(--ink-2); font-size:18px;
+}
+.modal-wrap{position:relative}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wordmark">Alfa <em>Opciona</em> Capital</div>
+  <span class="estado-pill" id="pill-estado">Pretemporada</span>
+</header>
+
+<main>
+
+  <!-- ============ CLASIFICACIÓN ============ -->
+  <section class="panel activo" id="panel-clasificacion" role="tabpanel" aria-labelledby="tab-clasificacion">
+    <p class="eyebrow" id="eyebrow-temporada">Temporada 2026–27 · Mes 0 de 12</p>
+    <h1 class="titulo" id="titulo-clasificacion">Parrilla de salida</h1>
+    <p class="sub" id="sub-clasificacion">Tres carteras, un método, doce meses. Cada jugador arranca con 500.000&nbsp;€ y un máximo de 10 valores.</p>
+
+    <div class="stack" id="lista-jugadores"><!-- JS --></div>
+
+    <div class="card" style="margin-top:14px">
+      <div class="chart-head">
+        <div>
+          <div class="chart-tit">Evolución de las carteras</div>
+          <div class="chart-sub">Valor total (posiciones + caja) · foto al cierre de cada mes</div>
+        </div>
+        <button class="btn-mini" id="btn-tabla" aria-expanded="false" aria-controls="tabla-wrap">Ver tabla</button>
+      </div>
+      <div class="chart-wrap" id="chart-wrap">
+        <svg id="chart" viewBox="0 0 640 300" role="img" aria-label="Gráfico de líneas con la evolución mensual del valor de las tres carteras"></svg>
+        <div class="tooltip" id="tooltip"></div>
+      </div>
+      <div id="tabla-wrap" hidden></div>
+      <div class="leyenda" id="leyenda"><!-- JS --></div>
+      <p class="nota-chart" id="nota-chart"></p>
+    </div>
+  </section>
+
+  <!-- ============ CARTERAS ============ -->
+  <section class="panel" id="panel-carteras" role="tabpanel" aria-labelledby="tab-carteras">
+    <p class="eyebrow">Las tres carteras</p>
+    <h1 class="titulo">Carteras</h1>
+    <p class="sub">Posiciones, caja y movimientos de cada jugador. Precios reales con fuente y fecha; lo que falte se marca «pendiente», nunca se inventa.</p>
+    <div class="seg" role="tablist" aria-label="Elegir jugador" id="seg-jugadores"><!-- JS --></div>
+    <div id="detalle-cartera" role="tabpanel" aria-live="polite"><!-- JS --></div>
+  </section>
+
+  <!-- ============ MÉTODO ============ -->
+  <section class="panel" id="panel-metodo" role="tabpanel" aria-labelledby="tab-metodo">
+    <p class="eyebrow">El embudo IKIGAI</p>
+    <h1 class="titulo">El Método</h1>
+    <p class="sub">Ningún valor entra en cartera saltándose un paso. El embudo va de todos los candidatos a una orden concreta: <b class="num" style="color:var(--ink)">∞ → 20 → 10 → orden</b>.</p>
+
+    <div class="paso">
+      <span class="paso-num" aria-hidden="true"></span>
+      <div class="card">
+        <span class="paso-skill">PASO 1 · ficha-triaje-ikigai</span>
+        <h3>Triaje — ¿compro o paso?</h3>
+        <p>Primer filtro sobre cualquier valor que parezca interesante. Tres ejes de convicción con pesos fijos; el momentum <b>no puntúa</b> (peso 0): solo dice cuándo, nunca qué.</p>
+        <div class="pesos" aria-hidden="true">
+          <i style="width:45%; background:var(--accent)"></i>
+          <i style="width:35%; background:var(--accent-2)"></i>
+          <i style="width:20%; background:var(--ink-3)"></i>
+        </div>
+        <div class="pesos-ley">
+          <span><b>45%</b> Calidad</span>
+          <span><b>35%</b> Valoración</span>
+          <span><b>20%</b> Crecimiento</span>
+          <span><b>0%</b> Timing</span>
+        </div>
+        <div class="semaforo">
+          <div class="sem"><i style="background:var(--up)"></i><span><b>≥ 7,0</b> → COMPRAR / iniciar</span></div>
+          <div class="sem"><i style="background:var(--accent-2)"></i><span><b>5,0–6,9</b> → VIGILAR</span></div>
+          <div class="sem"><i style="background:var(--down)"></i><span><b>&lt; 5,0</b> → PASAR</span></div>
+        </div>
+        <details>
+          <summary>Qué mira cada eje y las reglas duras</summary>
+          <ul>
+            <li><b>Calidad (45%):</b> margen bruto y su tendencia · <b>owner earnings = FCF − SBC</b> (caja libre menos pago en acciones): el ancla · trayectoria del FCF · ROIC frente a WACC · moat y riesgo de disrupción · recompras medidas por el cambio NETO de acciones, y a qué precio se recompra.</li>
+            <li><b>Valoración (35%):</b> owner earnings yield frente al bono a 10 años · PER GAAP y non-GAAP juntos · EV/Ventas con el EV recalculado · percentil de valoración a 5 años · margen de seguridad.</li>
+            <li><b>Crecimiento (20%):</b> ventas, bookings y ARR · cohortes e indicadores adelantados · BPA forward 12/24&nbsp;m y revisiones · PEG con su estado (válido / dudoso / inservible).</li>
+            <li><b>Reglas duras:</b> el non-GAAP es termómetro, nunca ancla · EV recalculado tras eventos de capital · short interest cuenta como riesgo, no como momentum · cada métrica con fuente, fecha y estado (verificada / estimada / no disponible) · un eje sin datos cuenta como incertidumbre, no como optimismo.</li>
+          </ul>
+        </details>
+      </div>
+    </div>
+
+    <p class="corte">Quedan los 20 mejores</p>
+
+    <div class="paso">
+      <span class="paso-num" aria-hidden="true"></span>
+      <div class="card">
+        <span class="paso-skill">PASO 2 · analisis-fundamental</span>
+        <h3>Fundamentales — los 15 bloques</h3>
+        <p>Inmersión profunda al estilo Buffett/Munger sobre los 20 supervivientes. Nota de 1 a 10 por bloque y convicción agregada; solo los <b>10 mejores</b> siguen adelante.</p>
+        <details>
+          <summary>Los 15 bloques del análisis</summary>
+          <ul>
+            <li><b>1. Negocio y modelo</b> — qué hace y cómo gana dinero.</li>
+            <li><b>2. Beneficio y crecimiento</b> — ingresos, márgenes y FCF, con su causa.</li>
+            <li><b>3. Economía unitaria</b> — NRR, churn, LTV/CAC, cohortes.</li>
+            <li><b>4. SBC y owner earnings</b> — el bloque crítico: FCF − SBC y dilución neta.</li>
+            <li><b>5. Moat y disrupción</b> — ancho, estrecho o erosionándose.</li>
+            <li><b>6. Comparables</b> — frente a sus pares reales.</li>
+            <li><b>7. Valoración</b> — múltiplos, reverse DCF y rango de valor razonable.</li>
+            <li><b>8. Deuda y salud financiera</b> — deuda neta exacta, convertibles, vencimientos.</li>
+            <li><b>9. Management y capital</b> — insiders, retribución, historial de asignación.</li>
+            <li><b>10. Macro, ciclo y divisa</b> — sensibilidad al entorno.</li>
+            <li><b>11. Escenarios 12–18 m</b> — Bear/Base/Bull con probabilidades que suman 100%.</li>
+            <li><b>12. Riesgos y catalizadores</b> — con trigger medible y fecha.</li>
+            <li><b>13. Semáforo</b> — verde/ámbar/rojo con umbrales, no un «OK» genérico.</li>
+            <li><b>14. Tesis e invalidación</b> — «vendo o reviso si A/B/C», escrito antes de comprar.</li>
+            <li><b>15. Decisión final</b> — veredicto, zona de entrada, tamaño y confianza de datos.</li>
+          </ul>
+        </details>
+      </div>
+    </div>
+
+    <p class="corte">Quedan los 10 mejores</p>
+
+    <div class="paso">
+      <span class="paso-num" aria-hidden="true"></span>
+      <div class="card">
+        <span class="paso-skill">PASO 3 · analisis-tecnico-momentum</span>
+        <h3>Momentum — el precio de entrada</h3>
+        <p>Con el «sí» de valor ya dado, el gráfico fija el <b>precio de compra: el primer suelo</b> (el primer soporte por debajo del precio actual). Ahí se coloca la orden. El importe lo marca la regla de tamaño de cada jugador; el gráfico nunca es motivo de compra, solo el punto de entrada.</p>
+        <details>
+          <summary>Qué calcula y cómo fija los niveles</summary>
+          <ul>
+            <li><b>Indicadores:</b> RSI(14) · ATR(14) · medias de 20/50/100/200 sesiones · rango de 52 semanas · volatilidad anualizada · tendencia de fondo.</li>
+            <li><b>Soportes y resistencias:</b> retrocesos de Fibonacci sobre el rango anual, medias móviles, pivotes recientes y extremos de 52 semanas, fusionados en niveles limpios.</li>
+            <li><b>Proyección por plazos:</b> banda de volatilidad ATR × √t a 1, 3 y 4 semanas y a 3 meses vista — rangos de probabilidad, no predicciones.</li>
+            <li><b>Precio de compra = primer suelo:</b> la orden se coloca en el primer soporte por debajo del precio actual. No se compra la divergencia, se compra la confirmación; invalidación bajo el segundo mínimo.</li>
+          </ul>
+        </details>
+      </div>
+    </div>
+
+    <p class="corte">Candidata a orden</p>
+
+    <div class="paso">
+      <span class="paso-num" aria-hidden="true"></span>
+      <div class="card">
+        <span class="paso-skill">PUERTA FINAL · puerta-decision-ikigai</span>
+        <h3>El motivo, a examen</h3>
+        <p>Antes de ejecutar, cada jugador escribe su MOTIVO y responde a la pregunta de oro: <b>«¿lo compraría hoy con cash fresco?»</b>. Si el motivo no sobrevive a los nueve trip-wires (las nueve alarmas que delatan un mal motivo), no hay orden.</p>
+      </div>
+    </div>
+
+    <p class="corte">Orden de compra</p>
+    <div class="card" style="text-align:center; color:var(--ink-2)">
+      Solo cuando el motivo supera la puerta, la compra se ejecuta y queda registrada en el <b style="color:var(--ink)">Diario</b> con precio, importe y motivo.
+    </div>
+  </section>
+
+  <!-- ============ DIARIO ============ -->
+  <section class="panel" id="panel-diario" role="tabpanel" aria-labelledby="tab-diario">
+    <p class="eyebrow">Movimientos</p>
+    <h1 class="titulo">Diario de operaciones</h1>
+    <p class="sub">Cada orden queda registrada con fecha, jugador, valor, precio con fuente, importe y —lo más importante— el motivo.</p>
+    <div class="stack" id="lista-diario"><!-- JS --></div>
+  </section>
+
+  <!-- ============ REGLAS ============ -->
+  <section class="panel" id="panel-reglas" role="tabpanel" aria-labelledby="tab-reglas">
+    <p class="eyebrow">Las reglas del juego</p>
+    <h1 class="titulo">Reglas</h1>
+    <p class="sub">Doce meses, tres jugadores, un mismo método. Gana quien más valor total tenga al cierre de la temporada.</p>
+
+    <div class="card" style="margin-bottom:14px">
+      <h3 style="font-size:16px; margin-bottom:12px">Los jugadores</h3>
+      <div class="stack" id="lista-jugadores-reglas"><!-- JS --></div>
+    </div>
+
+    <div class="card" style="margin-bottom:14px">
+      <h3 style="font-size:16px; margin-bottom:12px">Reglas de juego</h3>
+      <div class="regla-lista">
+        <div class="regla"><span class="icono num">€</span><span><b>500.000&nbsp;€ de capital inicial</b> por jugador. Dinero ficticio: es un juego de aprendizaje.</span></div>
+        <div class="regla"><span class="icono num">10</span><span><b>Máximo 10 valores</b> en cartera por jugador, en todo momento.</span></div>
+        <div class="regla"><span class="icono num">€</span><span><b>Tamaño de la posición:</b> Tesis Mensuales compra <b>20.000&nbsp;$ por valor</b>, el día de la tesis. Claude y cada jugador fijan su propio tamaño.</span></div>
+        <div class="regla"><span class="icono">↧</span><span><b>Precio de entrada:</b> lo marca el <b>primer suelo</b> (primer soporte) del análisis de momentum.</span></div>
+        <div class="regla"><span class="icono num">12</span><span><b>12 meses de competición.</b> Foto mensual el último día hábil de cada mes; gana quien tenga el mayor valor total (posiciones + caja).</span></div>
+        <div class="regla"><span class="icono">⚖</span><span><b>El embudo es obligatorio:</b> triaje → fundamentales → momentum → puerta de decisión. Sin atajos, también para Claude.</span></div>
+        <div class="regla"><span class="icono">✓</span><span><b>Datos reales siempre:</b> precios con fuente y fecha. Si falta un dato, se marca «pendiente»; jamás se inventa una cifra.</span></div>
+        <div class="regla"><span class="icono">$</span><span><b>Divisa base EUR.</b> Las compras en dólares se convierten al tipo BCE del día de la operación, y el tipo queda anotado.</span></div>
+        <div class="regla"><span class="icono">0</span><span><b>Sin comisiones ni impuestos</b> en esta primera temporada: igual de irreal para los tres.</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 style="font-size:16px; margin-bottom:12px">El ritual mensual</h3>
+      <div class="regla-lista">
+        <div class="regla"><span class="icono num">1</span><span>Se entrega la <b>tesis mensual</b> y La Casa la ejecuta por el embudo.</span></div>
+        <div class="regla"><span class="icono num">2</span><span><b>Claude ejecuta su propio embudo</b>, decide y justifica cada movimiento en el Diario. Su sistema evoluciona mes a mes con lo aprendido.</span></div>
+        <div class="regla"><span class="icono num">3</span><span><b>Cada jugador humano juega en la app</b>: compra y vende su cartera tras pasar el embudo.</span></div>
+        <div class="regla"><span class="icono num">4</span><span>Se actualizan precios, se guarda la <b>foto mensual</b> y la clasificación se mueve.</span></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <span id="pie-actualizado"></span><br>
+  ALFA OPCIONA CAPITAL · Juego interno IKIGAI × Kaizen<br>
+  Dinero ficticio con datos de mercado reales. Esto es un juego de aprendizaje, no una recomendación de inversión.
+</footer>
+
+<nav class="tabbar" role="tablist" aria-label="Secciones">
+  <button role="tab" id="tab-clasificacion" aria-selected="true" aria-controls="panel-clasificacion" data-panel="panel-clasificacion">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 20V10m6 10V4M3 20v-5m18 5v-8"/></svg>
+    Clasificación
+  </button>
+  <button role="tab" id="tab-carteras" aria-selected="false" aria-controls="panel-carteras" data-panel="panel-carteras">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3v9l6.5 6.2"/></svg>
+    Carteras
+  </button>
+  <button role="tab" id="tab-metodo" aria-selected="false" aria-controls="panel-metodo" data-panel="panel-metodo">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16l-6 8v6l-4 2v-8L4 4z"/></svg>
+    Método
+  </button>
+  <button role="tab" id="tab-diario" aria-selected="false" aria-controls="panel-diario" data-panel="panel-diario">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h11a3 3 0 013 3v13H8a3 3 0 01-3-3V4z"/><path d="M9 8h6M9 12h6"/></svg>
+    Diario
+  </button>
+  <button role="tab" id="tab-reglas" aria-selected="false" aria-controls="panel-reglas" data-panel="panel-reglas">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18M5 6l7-3 7 3M5 6l-3 7a4 4 0 006 0L5 6zm14 0l-3 7a4 4 0 006 0l-3-7z"/></svg>
+    Reglas
+  </button>
+</nav>
+
+<noscript><p style="padding:20px; text-align:center">Esta app necesita JavaScript para mostrar las carteras.</p></noscript>
+
+<!-- ============ ONBOARDING: elegir nombre ============ -->
+<div class="overlay" id="overlay-onboarding" hidden role="dialog" aria-modal="true" aria-labelledby="onb-titulo">
+  <div class="modal modal-wrap">
+    <p class="modal-eyebrow">Alfa Opciona Capital</p>
+    <h2 id="onb-titulo">Empieza tu partida</h2>
+    <p class="intro">Compites durante 12 meses contra <b>Tesis Mensuales</b> y <b>Claude</b>. Arrancas con 500.000&nbsp;€ y un máximo de 10 valores. Elige tu nombre y empieza hoy.</p>
+    <div class="campo">
+      <label for="onb-nombre">¿Cómo te llamas?</label>
+      <input id="onb-nombre" type="text" maxlength="24" autocomplete="off" placeholder="Tu nombre o apodo" inputmode="text">
+    </div>
+    <p class="modal-error" id="onb-error"></p>
+    <div class="modal-acciones">
+      <button class="btn-primario" id="onb-empezar">Empezar mi partida</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: comprar / vender / actualizar ============ -->
+<div class="overlay" id="overlay-trade" hidden role="dialog" aria-modal="true" aria-labelledby="trade-titulo">
+  <div class="modal modal-wrap">
+    <button class="cerrar-modal" id="trade-cerrar" aria-label="Cerrar">✕</button>
+    <p class="modal-eyebrow" id="trade-eyebrow">Nueva compra</p>
+    <h2 id="trade-titulo">Añadir un valor</h2>
+    <p class="intro" id="trade-intro">Tras pasar triaje y fundamentales, compra en el <b>primer suelo</b> del momentum.</p>
+    <div id="trade-campos"><!-- JS rellena los campos según la acción --></div>
+    <p class="modal-error" id="trade-error"></p>
+    <div class="modal-acciones">
+      <button class="btn-primario" id="trade-confirmar">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ESTADO DEL JUEGO (lo regenera Claude en cada actualización) ============ -->
+<script id="estado-juego" type="application/json">
+{
+  "juego": {
+    "nombre": "ALFA OPCIONA CAPITAL",
+    "capitalInicial": 500000,
+    "maxPosiciones": 10,
+    "duracionMeses": 12,
+    "mesArranque": "2026-08",
+    "creado": "2026-07-23",
+    "estado": "en-juego"
+  },
+  "benchmarks": [
+    {
+      "id": "tesis",
+      "nombre": "Tesis Mensuales",
+      "alias": "LA CASA",
+      "descripcion": "Juega las tesis predefinidas que se entregan cada mes. Cada valor entra con 20.000 $. Disciplina pura: sin improvisación.",
+      "caja": 324206.7,
+      "posiciones": [
+        {
+          "ticker": "DUOL",
+          "nombre": "Duolingo",
+          "titulos": 165.0982,
+          "precioCompraEUR": 106.48,
+          "costeEUR": 17579.33,
+          "precioActual": 106.48,
+          "fechaPrecio": "23/07/2026"
+        },
+        {
+          "ticker": "QCOM",
+          "nombre": "Qualcomm",
+          "titulos": 118.1719,
+          "precioCompraEUR": 148.76,
+          "costeEUR": 17579.33,
+          "precioActual": 148.76,
+          "fechaPrecio": "23/07/2026"
+        },
+        {
+          "ticker": "MELI",
+          "nombre": "MercadoLibre",
+          "titulos": 11.1783,
+          "precioCompraEUR": 1572.62,
+          "costeEUR": 17579.33,
+          "precioActual": 1572.62,
+          "fechaPrecio": "23/07/2026"
+        },
+        {
+          "ticker": "FOXF",
+          "nombre": "Fox Factory",
+          "titulos": 1124.8594,
+          "precioCompraEUR": 15.63,
+          "costeEUR": 17579.33,
+          "precioActual": 15.63,
+          "fechaPrecio": "23/07/2026"
+        },
+        {
+          "ticker": "FVRR",
+          "nombre": "Fiverr",
+          "titulos": 1917.5455,
+          "precioCompraEUR": 9.17,
+          "costeEUR": 17579.33,
+          "precioActual": 9.17,
+          "fechaPrecio": "23/07/2026"
+        },
+        {
+          "ticker": "CROX",
+          "nombre": "Crocs",
+          "titulos": 151.6703,
+          "precioCompraEUR": 115.9,
+          "costeEUR": 17579.33,
+          "precioActual": 115.9,
+          "fechaPrecio": "23/07/2026"
+        },
+        {
+          "ticker": "ROOT",
+          "nombre": "Root",
+          "titulos": 346.9211,
+          "precioCompraEUR": 50.67,
+          "costeEUR": 17579.33,
+          "precioActual": 50.67,
+          "fechaPrecio": "23/07/2026"
+        },
+        {
+          "ticker": "V",
+          "nombre": "Visa",
+          "titulos": 57.019,
+          "precioCompraEUR": 308.31,
+          "costeEUR": 17579.33,
+          "precioActual": 308.31,
+          "fechaPrecio": "23/07/2026"
+        },
+        {
+          "ticker": "AMZN",
+          "nombre": "Amazon",
+          "titulos": 85.556,
+          "precioCompraEUR": 205.47,
+          "costeEUR": 17579.33,
+          "precioActual": 205.47,
+          "fechaPrecio": "23/07/2026"
+        },
+        {
+          "ticker": "NDAQ",
+          "nombre": "Nasdaq",
+          "titulos": 217.6752,
+          "precioCompraEUR": 80.76,
+          "costeEUR": 17579.33,
+          "precioActual": 80.76,
+          "fechaPrecio": "23/07/2026"
+        }
+      ]
+    },
+    {
+      "id": "claude",
+      "nombre": "Claude",
+      "alias": "LA MÁQUINA",
+      "descripcion": "IA con sistema propio. Aprende y ajusta su método cada mes con lo que funcionó y lo que no.",
+      "caja": 500000,
+      "posiciones": []
+    }
+  ],
+  "movimientos": [
+    {
+      "fecha": "2026-07-23",
+      "jugadorId": "tesis",
+      "tipo": "compra",
+      "ticker": "DUOL",
+      "titulos": 165.0982,
+      "precioEUR": 106.48,
+      "importeEUR": 17579.33,
+      "motivo": "Tesis mensual: 20.000 $ a precio de mercado (23-jul-2026)."
+    },
+    {
+      "fecha": "2026-07-23",
+      "jugadorId": "tesis",
+      "tipo": "compra",
+      "ticker": "QCOM",
+      "titulos": 118.1719,
+      "precioEUR": 148.76,
+      "importeEUR": 17579.33,
+      "motivo": "Tesis mensual: 20.000 $ a precio de mercado (23-jul-2026)."
+    },
+    {
+      "fecha": "2026-07-23",
+      "jugadorId": "tesis",
+      "tipo": "compra",
+      "ticker": "MELI",
+      "titulos": 11.1783,
+      "precioEUR": 1572.62,
+      "importeEUR": 17579.33,
+      "motivo": "Tesis mensual: 20.000 $ a precio de mercado (23-jul-2026)."
+    },
+    {
+      "fecha": "2026-07-23",
+      "jugadorId": "tesis",
+      "tipo": "compra",
+      "ticker": "FOXF",
+      "titulos": 1124.8594,
+      "precioEUR": 15.63,
+      "importeEUR": 17579.33,
+      "motivo": "Tesis mensual: 20.000 $ a precio de mercado (23-jul-2026)."
+    },
+    {
+      "fecha": "2026-07-23",
+      "jugadorId": "tesis",
+      "tipo": "compra",
+      "ticker": "FVRR",
+      "titulos": 1917.5455,
+      "precioEUR": 9.17,
+      "importeEUR": 17579.33,
+      "motivo": "Tesis mensual: 20.000 $ a precio de mercado (23-jul-2026)."
+    },
+    {
+      "fecha": "2026-07-23",
+      "jugadorId": "tesis",
+      "tipo": "compra",
+      "ticker": "CROX",
+      "titulos": 151.6703,
+      "precioEUR": 115.9,
+      "importeEUR": 17579.33,
+      "motivo": "Tesis mensual: 20.000 $ a precio de mercado (23-jul-2026)."
+    },
+    {
+      "fecha": "2026-07-23",
+      "jugadorId": "tesis",
+      "tipo": "compra",
+      "ticker": "ROOT",
+      "titulos": 346.9211,
+      "precioEUR": 50.67,
+      "importeEUR": 17579.33,
+      "motivo": "Tesis mensual: 20.000 $ a precio de mercado (23-jul-2026)."
+    },
+    {
+      "fecha": "2026-07-23",
+      "jugadorId": "tesis",
+      "tipo": "compra",
+      "ticker": "V",
+      "titulos": 57.019,
+      "precioEUR": 308.31,
+      "importeEUR": 17579.33,
+      "motivo": "Tesis mensual: 20.000 $ a precio de mercado (23-jul-2026)."
+    },
+    {
+      "fecha": "2026-07-23",
+      "jugadorId": "tesis",
+      "tipo": "compra",
+      "ticker": "AMZN",
+      "titulos": 85.556,
+      "precioEUR": 205.47,
+      "importeEUR": 17579.33,
+      "motivo": "Tesis mensual: 20.000 $ a precio de mercado (23-jul-2026)."
+    },
+    {
+      "fecha": "2026-07-23",
+      "jugadorId": "tesis",
+      "tipo": "compra",
+      "ticker": "NDAQ",
+      "titulos": 217.6752,
+      "precioEUR": 80.76,
+      "importeEUR": 17579.33,
+      "motivo": "Tesis mensual: 20.000 $ a precio de mercado (23-jul-2026)."
+    }
+  ],
+  "fotosMensuales": [
+    {
+      "mes": "2026-07",
+      "etiqueta": "Arranque",
+      "fecha": "2026-07-23",
+      "valores": {
+        "tesis": 500000,
+        "claude": 500000
+      }
+    }
+  ]
+}
+</script>
+
+<script>
+(function(){
+"use strict";
+
+/* ====== datos base ====== */
+var ESTADO = JSON.parse(document.getElementById("estado-juego").textContent);
+var JUEGO = ESTADO.juego;
+var BENCH = ESTADO.benchmarks || ESTADO.jugadores || [];
+var LS_KEY = "alfa-opciona-user-v1";
+var COLORES = { tesis:"var(--c-tesis)", claude:"var(--c-claude)", user:"var(--c-jorge)" };
+var MARCAS  = { tesis:"circulo", claude:"cuadrado", user:"rombo" };
+var MESES = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+var MESES_LARGOS = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+
+/* ====== utilidades ====== */
+function esNum(v){ return typeof v === "number" && isFinite(v); }
+function fmtEUR(v){ if(!esNum(v)) return "pendiente"; return v.toLocaleString("es-ES",{maximumFractionDigits:0}) + " €"; }
+function fmtPrecio(v){ if(!esNum(v)) return "pendiente"; return v.toLocaleString("es-ES",{minimumFractionDigits:2,maximumFractionDigits:2}) + " €"; }
+function fmtTitulos(v){ return esNum(v) ? v.toLocaleString("es-ES",{maximumFractionDigits:2}) : "?"; }
+function fmtPct(v){ var s=v.toLocaleString("es-ES",{minimumFractionDigits:1,maximumFractionDigits:1}); return (v>0?"+":"")+s+" %"; }
+function dosDig(n){ return (n<10?"0":"")+n; }
+function hoyISO(){ var d=new Date(); return d.getFullYear()+"-"+dosDig(d.getMonth()+1)+"-"+dosDig(d.getDate()); }
+function mesISO(){ return hoyISO().slice(0,7); }
+function fechaCorta(iso){ var p=(iso||"").split("-"); return p.length===3 ? (p[2]+"/"+p[1]+"/"+p[0]) : iso; }
+function diffMeses(a,b){ var pa=a.split("-"),pb=b.split("-"); return (parseInt(pa[0],10)-parseInt(pb[0],10))*12 + (parseInt(pa[1],10)-parseInt(pb[1],10)); }
+function etiquetaMes(mes,etiqueta){ if(etiqueta) return etiqueta; var p=mes.split("-"); return MESES[parseInt(p[1],10)-1]+" "+p[0].slice(2); }
+function mesLargo(m){ var n=parseInt((m||"").split("-")[1],10); return (n>=1&&n<=12)?MESES_LARGOS[n-1]:"el mes de arranque"; }
+function el(html){ var d=document.createElement("div"); d.innerHTML=html.trim(); return d.firstChild; }
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+function valorJugador(j){
+  var pos=0, pendiente=false;
+  (j.posiciones||[]).forEach(function(p){
+    if(esNum(p.precioActual)&&esNum(p.titulos)) pos+=p.titulos*p.precioActual;
+    else if(esNum(p.precioCompraEUR)&&esNum(p.titulos)){ pos+=p.titulos*p.precioCompraEUR; pendiente=true; }
+    else if(esNum(p.costeEUR)){ pos+=p.costeEUR; pendiente=true; }
+    else pendiente=true;
+  });
+  return { total:j.caja+pos, invertido:pos, pendiente:pendiente };
+}
+
+/* ====== jugador humano (localStorage) ====== */
+function cargarUsuario(){ try{ var raw=localStorage.getItem(LS_KEY); if(!raw) return null; var u=JSON.parse(raw); return (u&&u.nombre)?u:null; }catch(e){ return null; } }
+function guardarUsuario(){ try{ if(USER) localStorage.setItem(LS_KEY, JSON.stringify(USER)); }catch(e){} }
+function crearUsuario(nombre){
+  return { id:"user", nombre:nombre, alias:"TÚ",
+    descripcion:"Tu partida. Compras y ventas guardadas en este dispositivo.",
+    caja:JUEGO.capitalInicial, inicio:hoyISO(), posiciones:[], movimientos:[],
+    fotos:[{ mes:mesISO(), valor:JUEGO.capitalInicial }] };
+}
+var USER = cargarUsuario();
+function snapshotUsuario(){
+  if(!USER) return;
+  if(!USER.fotos) USER.fotos=[];
+  var m=mesISO(), total=valorJugador(USER).total;
+  var f=USER.fotos.filter(function(x){return x.mes===m;})[0];
+  if(f){ f.valor=total; } else { USER.fotos.push({ mes:m, valor:total }); }
+}
+function fotosCombinadas(){
+  var base=(ESTADO.fotosMensuales||[]).map(function(f){ return { mes:f.mes, etiqueta:f.etiqueta, fecha:f.fecha, valores:Object.assign({}, f.valores) }; });
+  if(USER){
+    var mapU={}; (USER.fotos||[]).forEach(function(x){ mapU[x.mes]=x.valor; });
+    base.forEach(function(f){ if(mapU[f.mes]!=null) f.valores.user=mapU[f.mes]; });
+    (USER.fotos||[]).forEach(function(x){ if(!base.some(function(f){return f.mes===x.mes;})) base.push({ mes:x.mes, valores:{ user:x.valor } }); });
+    base.sort(function(a,b){ return a.mes<b.mes?-1:(a.mes>b.mes?1:0); });
+  }
+  return base;
+}
+
+/* ====== estado de render ====== */
+var JUGADORES=[], fotos=[], esPretemporada=false;
+function recomputar(){
+  snapshotUsuario();
+  JUGADORES = USER ? BENCH.concat([USER]) : BENCH.slice();
+  fotos = fotosCombinadas();
+  esPretemporada = (JUEGO.estado==="pretemporada") && !USER;
+}
+
+/* ====== gráfico ====== */
+var svg = document.getElementById("chart");
+var NS = "http://www.w3.org/2000/svg";
+var W=640,H=300,PL=112,PR=92,PT=18,PB=46;
+var slots = JUEGO.duracionMeses + 1;
+var CH = { puntos:[], cross:null };
+function sx(i){ return PL + (W-PL-PR) * (slots<=1 ? 0 : i/(slots-1)); }
+function nodo(tag,attrs,texto){ var n=document.createElementNS(NS,tag); for(var k in attrs) n.setAttribute(k,attrs[k]); if(texto!=null) n.textContent=texto; svg.appendChild(n); return n; }
+function marca(id,x,y,c){
+  var f=MARCAS[id];
+  if(f==="cuadrado") nodo("rect",{x:x-6.5,y:y-6.5,width:13,height:13,rx:3,fill:c,stroke:"var(--surface)","stroke-width":2.5});
+  else if(f==="rombo") nodo("rect",{x:x-7,y:y-7,width:14,height:14,rx:3,fill:c,stroke:"var(--surface)","stroke-width":2.5,transform:"rotate(45 "+x+" "+y+")"});
+  else nodo("circle",{cx:x,cy:y,r:7,fill:c,stroke:"var(--surface)","stroke-width":2.5});
+}
+function etiquetasEjeX(){
+  var out=[], m=parseInt(JUEGO.mesArranque.split("-")[1],10);
+  out.push(fotos[0]&&fotos[0].etiqueta?fotos[0].etiqueta:"Salida");
+  for(var i=0;i<JUEGO.duracionMeses;i++) out.push(MESES[(m-1+i)%12]);
+  return out;
+}
+function dibujarGrafico(){
+  svg.innerHTML="";
+  var vals=[]; fotos.forEach(function(f){ JUGADORES.forEach(function(j){ if(esNum(f.valores[j.id])) vals.push(f.valores[j.id]); }); });
+  if(!vals.length) vals=[JUEGO.capitalInicial];
+  var vmin=Math.min.apply(null,vals), vmax=Math.max.apply(null,vals);
+  if(vmin===vmax){ vmin*=0.96; vmax*=1.04; }
+  var pad=(vmax-vmin)*0.08; vmin-=pad; vmax+=pad;
+  var decK=(vmax-vmin)<20000?1:0;
+  function sy(v){ return PT + (H-PT-PB)*(1-(v-vmin)/(vmax-vmin)); }
+  var t;
+  for(t=0;t<=4;t++){
+    var v=vmin+(vmax-vmin)*t/4, y=sy(v);
+    nodo("line",{x1:PL,x2:W-PR,y1:y,y2:y,stroke:"var(--line)","stroke-width":1});
+    nodo("text",{x:PL-12,y:y+7,"text-anchor":"end","font-size":20,fill:"var(--ink-3)","font-family":"var(--font-ui)"}, (v/1000).toLocaleString("es-ES",{minimumFractionDigits:decK,maximumFractionDigits:decK})+" k€");
+  }
+  var etisX=etiquetasEjeX();
+  etisX.forEach(function(e,i){ if(i===0||i%2===0) nodo("text",{x:sx(i),y:H-14,"text-anchor":"middle","font-size":23,fill:"var(--ink-3)","font-family":"var(--font-ui)"}, e); });
+
+  if(fotos.length>=2){
+    JUGADORES.forEach(function(j){
+      var pts=fotos.map(function(f,i){ return esNum(f.valores[j.id])?(sx(i)+","+sy(f.valores[j.id])):null; }).filter(Boolean).join(" ");
+      if(pts) nodo("polyline",{points:pts,fill:"none",stroke:COLORES[j.id],"stroke-width":3.5,"stroke-linejoin":"round","stroke-linecap":"round"});
+    });
+    JUGADORES.forEach(function(j){ fotos.forEach(function(f,i){ if(esNum(f.valores[j.id])) marca(j.id,sx(i),sy(f.valores[j.id]),COLORES[j.id]); }); });
+    function ultNum(id){ for(var k=fotos.length-1;k>=0;k--){ if(esNum(fotos[k].valores[id])) return fotos[k].valores[id]; } return null; }
+    var finales=JUGADORES.map(function(j){ var uv=ultNum(j.id); return uv==null?null:{ n:j.nombre.split(" ")[0], c:COLORES[j.id], y:sy(uv) }; }).filter(Boolean).sort(function(a,b){return a.y-b.y;});
+    for(var q=1;q<finales.length;q++){ if(finales[q].y-finales[q-1].y<24) finales[q].y=finales[q-1].y+24; }
+    finales.forEach(function(fx){ var yy=Math.max(PT+10,Math.min(H-PB-2,fx.y)); nodo("text",{x:sx(fotos.length-1)+12,y:yy+7,"font-size":22,"font-weight":700,fill:fx.c,"font-family":"var(--font-ui)"}, fx.n); });
+  } else {
+    var x0=sx(0), yb=sy(JUEGO.capitalInicial);
+    nodo("line",{x1:x0,x2:W-PR,y1:yb,y2:yb,stroke:"var(--line-strong)","stroke-width":1.5,"stroke-dasharray":"3 6"});
+    JUGADORES.forEach(function(j,i){ var vv=(fotos[0]&&esNum(fotos[0].valores[j.id]))?fotos[0].valores[j.id]:JUEGO.capitalInicial; marca(j.id,x0+i*20,sy(vv),COLORES[j.id]); });
+    nodo("text",{x:x0+72,y:yb-18,"font-size":21,fill:"var(--ink-2)","font-family":"var(--font-ui)"}, "Las carteras nacen a la par: "+fmtEUR(JUEGO.capitalInicial));
+  }
+  CH.cross = nodo("line",{x1:0,x2:0,y1:PT,y2:H-PB,stroke:"var(--line-strong)","stroke-width":1,opacity:0});
+  CH.puntos = fotos.map(function(f,i){ return { f:f, x:sx(i) }; });
+}
+
+/* tooltip (una sola vez) */
+var tip = document.getElementById("tooltip");
+function moverTooltip(ev){
+  if(!CH.puntos.length) return;
+  var rect=svg.getBoundingClientRect();
+  var px=(ev.touches?ev.touches[0].clientX:ev.clientX)-rect.left;
+  var xu=px*(W/rect.width);
+  var mejor=0,dm=Infinity;
+  for(var i=0;i<CH.puntos.length;i++){ var d=Math.abs(CH.puntos[i].x-xu); if(d<dm){dm=d;mejor=i;} }
+  var f=CH.puntos[mejor].f, xm=CH.puntos[mejor].x;
+  if(CH.cross){ CH.cross.setAttribute("x1",xm); CH.cross.setAttribute("x2",xm); CH.cross.setAttribute("opacity",1); }
+  var filas=JUGADORES.map(function(j){ return '<div class="tt-fila"><span style="display:inline-flex;align-items:center;gap:6px"><i class="punto" style="--pc:'+COLORES[j.id]+'"></i>'+esc(j.nombre)+'</span><b class="num">'+fmtEUR(f.valores[j.id])+'</b></div>'; }).join("");
+  tip.innerHTML='<div class="tt-mes">'+esc(etiquetaMes(f.mes,f.etiqueta))+'</div>'+filas;
+  tip.style.display="block";
+  var w=tip.offsetWidth||200;
+  var tx=xm/W*rect.width+12;
+  if(tx+w>rect.width) tx=xm/W*rect.width-w-12;
+  tx=Math.max(4,Math.min(tx,rect.width-w-4));
+  tip.style.left=tx+"px"; tip.style.top="14px";
+}
+function ocultarTooltip(ev){ if(ev&&ev.pointerType==="touch") return; tip.style.display="none"; if(CH.cross) CH.cross.setAttribute("opacity",0); }
+svg.addEventListener("pointermove",moverTooltip);
+svg.addEventListener("pointerdown",moverTooltip);
+svg.addEventListener("pointerleave",ocultarTooltip);
+
+/* botón tabla (una sola vez) */
+var wrap=document.getElementById("chart-wrap");
+var tablaWrap=document.getElementById("tabla-wrap");
+var btnTabla=document.getElementById("btn-tabla");
+btnTabla.addEventListener("click",function(){
+  var mostrando=btnTabla.getAttribute("aria-expanded")==="true";
+  btnTabla.setAttribute("aria-expanded",String(!mostrando));
+  btnTabla.textContent=mostrando?"Ver tabla":"Ver gráfico";
+  wrap.hidden=!mostrando; tablaWrap.hidden=mostrando;
+});
+
+/* ====== carteras ====== */
+var seg=document.getElementById("seg-jugadores");
+var detalle=document.getElementById("detalle-cartera");
+var carteraSel=null;
+function pintarCartera(id){
+  Array.prototype.forEach.call(seg.children,function(b){ b.setAttribute("aria-selected",String(b.id==="seg-"+id)); });
+  carteraSel=id;
+  var j=JUGADORES.filter(function(x){return x.id===id;})[0];
+  if(!j) return;
+  var v=valorJugador(j);
+  var ret=(v.total/JUEGO.capitalInicial-1)*100;
+  var c=COLORES[id];
+  var esUsuario=(id==="user");
+  var html='<div class="card" style="--jcolor:'+c+'">'+
+    '<div class="jfila" style="margin-bottom:4px">'+
+      '<span class="avatar" aria-hidden="true">'+esc(j.nombre.charAt(0))+'</span>'+
+      '<div class="jinfo"><div class="jnombre">'+esc(j.nombre)+' <span class="alias">'+esc(j.alias)+'</span></div><div class="jdesc">'+esc(j.descripcion)+'</div></div>'+
+    '</div>'+
+    '<div class="stats">'+
+      '<div class="stat"><div class="k">Valor total'+(v.pendiente?' (con pendientes)':'')+'</div><div class="v num">'+fmtEUR(Math.round(v.total))+'</div></div>'+
+      '<div class="stat"><div class="k">Rentabilidad</div><div class="v num" style="color:'+(ret>0.05?"var(--up)":ret<-0.05?"var(--down)":"var(--ink)")+'">'+fmtPct(ret)+'</div></div>'+
+      '<div class="stat"><div class="k">Caja</div><div class="v num">'+fmtEUR(Math.round(j.caja))+'</div></div>'+
+      '<div class="stat"><div class="k">Posiciones</div><div class="v num">'+(j.posiciones||[]).length+'/'+JUEGO.maxPosiciones+'</div></div>'+
+    '</div>'+
+    '<div class="barra" role="img" aria-label="Reparto entre inversión y caja">'+
+      (v.invertido>0?'<i style="width:'+(v.invertido/v.total*100)+'%; background:'+c+'"></i>':'')+
+      '<i style="width:'+(j.caja/v.total*100)+'%; background:var(--line-strong)"></i>'+
+    '</div>'+
+    '<div class="barra-leyenda num">Invertido '+Math.round(v.invertido/v.total*100)+' % · Caja '+Math.round(j.caja/v.total*100)+' %</div>'+
+  '</div>';
+  var posiciones=j.posiciones||[];
+  if(!posiciones.length){
+    html+='<div class="vacio" style="margin-top:14px"><b>Cartera en caja.</b><br>'+
+      (id==="tesis"?"La Casa espera la primera tesis mensual para poner en marcha el embudo."
+       :id==="claude"?"La Máquina ejecutará su embudo — triaje → fundamentales → momentum — en cuanto arranque la temporada."
+       :"Aún no tienes valores. Pasa tu idea por el embudo (triaje → fundamentales → momentum) y compra en el primer suelo.")+
+      "</div>";
+  } else {
+    html+='<div class="stack" style="margin-top:14px">'+posiciones.map(function(p,idx){
+      var val=(esNum(p.precioActual)&&esNum(p.titulos))?p.titulos*p.precioActual:null;
+      var pl=(val!=null&&esNum(p.costeEUR))?val-p.costeEUR:null;
+      var plPct=(pl!=null&&p.costeEUR)?pl/p.costeEUR*100:null;
+      return '<div class="card pos">'+
+        '<div class="pos-cab"><div><span class="pos-ticker">'+esc(p.ticker)+'</span> <span class="pos-nombre">'+esc(p.nombre||"")+'</span></div>'+
+        '<div class="num" style="font-weight:700">'+fmtEUR(val!=null?Math.round(val):null)+'</div></div>'+
+        '<div class="pos-datos num"><span>'+fmtTitulos(p.titulos)+' títulos</span><span>Compra '+fmtPrecio(p.precioCompraEUR)+'</span>'+
+          '<span>Actual '+(esNum(p.precioActual)?fmtPrecio(p.precioActual)+(p.fechaPrecio?" ("+esc(p.fechaPrecio)+")":""):"pendiente")+'</span>'+
+          (plPct!=null?'<span class="chip '+(pl>=0?"up":"down")+'">'+(pl>=0?"▲ ":"▼ ")+fmtPct(plPct)+'</span>':'')+'</div>'+
+        (esUsuario?('<div class="pos-acciones"><button class="btn-secundario" data-accion="actualizar" data-idx="'+idx+'">Actualizar precio</button><button class="btn-secundario" data-accion="vender" data-idx="'+idx+'">Vender</button></div>'):'')+
+      '</div>';
+    }).join("")+"</div>";
+  }
+  if(esUsuario){
+    var lleno=posiciones.length>=JUEGO.maxPosiciones, sinCaja=j.caja<1;
+    html+='<button class="btn-añadir" id="btn-comprar"'+((lleno||sinCaja)?' disabled':'')+'>+ Añadir un valor a mi cartera</button>';
+    if(lleno) html+='<p class="nota-chart" style="text-align:center">Cartera llena (10 de 10). Vende un valor para poder comprar otro.</p>';
+    html+='<div style="text-align:center; margin-top:20px"><button class="btn-peligro" id="btn-reiniciar">Reiniciar mi partida</button></div>';
+  }
+  detalle.innerHTML=html;
+  if(esUsuario){
+    var bC=document.getElementById("btn-comprar"); if(bC) bC.addEventListener("click",function(){ abrirTrade("comprar",null); });
+    var bR=document.getElementById("btn-reiniciar"); if(bR) bR.addEventListener("click",reiniciarPartida);
+    Array.prototype.forEach.call(detalle.querySelectorAll(".pos-acciones button"),function(btn){ btn.addEventListener("click",function(){ abrirTrade(btn.getAttribute("data-accion"),parseInt(btn.getAttribute("data-idx"),10)); }); });
+  }
+}
+
+/* ====== pintarTodo ====== */
+function pintarTodo(){
+  recomputar();
+  /* cabecera */
+  document.getElementById("pill-estado").textContent = USER ? "En juego" : (esPretemporada ? "Pretemporada" : ("Mes "+Math.max(0,fotos.length-1)+" de "+JUEGO.duracionMeses));
+  var ultima=fotos[fotos.length-1];
+  document.getElementById("pie-actualizado").textContent = "Actualizado el "+(ultima?fechaCorta(ultima.fecha):"")+" · Fuente de precios: Yahoo Finance (cuando hay posiciones)";
+  document.getElementById("eyebrow-temporada").textContent = "Temporada 2026–27 · Mes "+Math.max(0,fotos.length-1)+" de "+JUEGO.duracionMeses;
+  document.getElementById("titulo-clasificacion").textContent = (!esPretemporada||USER) ? "Clasificación" : "Parrilla de salida";
+  document.getElementById("sub-clasificacion").textContent = (!esPretemporada||USER)
+    ? "Valor total actual de cada cartera (posiciones + caja). Gana quien más lejos llegue en doce meses."
+    : "Tres carteras, un método, doce meses. Cada jugador arranca con 500.000 € y puede tener, como mucho, 10 valores.";
+
+  /* clasificación */
+  var lista=document.getElementById("lista-jugadores"); lista.innerHTML="";
+  var resumen=JUGADORES.map(function(j){ var v=valorJugador(j); return {j:j,total:v.total,invertido:v.invertido,pendiente:v.pendiente}; });
+  resumen.sort(function(a,b){ return b.total-a.total; });
+  resumen.forEach(function(r,i){
+    var rango=(i>0&&r.total===resumen[i-1].total)?resumen[i-1]._rango:i+1; r._rango=rango;
+    var ret=(r.total/JUEGO.capitalInicial-1)*100;
+    var clase=ret>0.05?"up":(ret<-0.05?"down":"");
+    var c=COLORES[r.j.id];
+    lista.appendChild(el(
+      '<article class="card jcard" style="--jcolor:'+c+'">'+
+        '<div class="jfila"><span class="rango num" aria-label="Puesto '+rango+'">'+rango+'.º</span>'+
+          '<span class="avatar" aria-hidden="true">'+esc(r.j.nombre.charAt(0))+'</span>'+
+          '<div class="jinfo"><div class="jnombre">'+esc(r.j.nombre)+' <span class="alias">'+esc(r.j.alias)+'</span></div><div class="jdesc">'+esc(r.j.descripcion)+'</div></div></div>'+
+        '<div class="jvalor num">'+fmtEUR(Math.round(r.total))+(r.pendiente?' <span style="font-size:13px;color:var(--ink-3)">(hay precios pendientes)</span>':'')+'</div>'+
+        '<div class="chips"><span class="chip num '+clase+'">'+(clase==="up"?"▲ ":clase==="down"?"▼ ":"")+fmtPct(ret)+'</span>'+
+          '<span class="chip num">Caja '+Math.round(r.j.caja/r.total*100)+' %</span>'+
+          '<span class="chip num">'+(r.j.posiciones||[]).length+'/'+JUEGO.maxPosiciones+' valores</span></div>'+
+      '</article>'));
+  });
+  if(resumen.every(function(r){return r.total===resumen[0].total;})){
+    lista.appendChild(el('<p class="nota-chart" style="text-align:center">'+(USER?"Aún no hay diferencias: haz tu primera compra para empezar a competir.":"Empate en la parrilla: la clasificación se moverá con la primera foto mensual.")+'</p>'));
+  }
+
+  /* gráfico + leyenda + nota + tabla */
+  dibujarGrafico();
+  var ley=document.getElementById("leyenda"); ley.innerHTML="";
+  JUGADORES.forEach(function(j){ ley.appendChild(el('<span><i class="punto" style="--pc:'+COLORES[j.id]+'"></i>'+esc(j.nombre)+'</span>')); });
+  document.getElementById("nota-chart").textContent = fotos.length>=2 ? "Toca el gráfico para ver los valores de cada mes." : "La primera curva aparecerá con la foto de cierre de "+mesLargo(JUEGO.mesArranque)+". Hasta entonces, empate a "+fmtEUR(JUEGO.capitalInicial)+".";
+  var filas=fotos.map(function(f){ return "<tr><td>"+esc(etiquetaMes(f.mes,f.etiqueta))+"</td>"+JUGADORES.map(function(j){ return '<td class="num">'+fmtEUR(f.valores[j.id])+"</td>"; }).join("")+"</tr>"; }).join("");
+  tablaWrap.innerHTML='<table class="tabla-datos"><thead><tr><th scope="col">Mes</th>'+JUGADORES.map(function(j){ return '<th scope="col">'+esc(j.nombre)+"</th>"; }).join("")+"</tr></thead><tbody>"+filas+"</tbody></table>";
+
+  /* carteras: pestañas + detalle */
+  seg.innerHTML="";
+  JUGADORES.forEach(function(j,i){
+    var b=el('<button role="tab" aria-selected="false" aria-controls="detalle-cartera" id="seg-'+j.id+'">'+esc(j.nombre)+"</button>");
+    b.addEventListener("click",function(){ pintarCartera(j.id); });
+    seg.appendChild(b);
+  });
+  var sel=(carteraSel&&JUGADORES.some(function(j){return j.id===carteraSel;}))?carteraSel:(USER?"user":(JUGADORES[0]&&JUGADORES[0].id));
+  if(sel) pintarCartera(sel);
+
+  /* diario */
+  var diario=document.getElementById("lista-diario"); diario.innerHTML="";
+  var movs=(ESTADO.movimientos||[]).slice();
+  if(USER&&USER.movimientos) movs=movs.concat(USER.movimientos.map(function(m){ var c=Object.assign({},m); c.jugadorId="user"; return c; }));
+  movs.sort(function(a,b){ return (a.fecha<b.fecha)?1:((a.fecha>b.fecha)?-1:0); });
+  if(!movs.length){
+    diario.appendChild(el('<div class="vacio"><b>El diario está en blanco.</b><br>Aquí quedará cada orden de los jugadores: qué se compró o vendió, a qué precio (con fuente y fecha), por qué importe y —lo más importante— <b>el motivo</b> que sobrevivió a la puerta de decisión.</div>'));
+  } else {
+    movs.forEach(function(m){
+      var j=JUGADORES.filter(function(x){return x.id===m.jugadorId;})[0];
+      diario.appendChild(el('<div class="card mov"><div class="mov-fecha num">'+esc((m.fecha||"").slice(5).split("-").reverse().join("/"))+'</div>'+
+        '<div class="mov-cuerpo"><span class="mov-tipo" style="color:'+(m.tipo==="venta"?"var(--down)":"var(--up)")+'">'+(m.tipo==="venta"?"Venta":"Compra")+"</span> de <b>"+esc(m.ticker)+"</b> · "+esc(j?j.nombre:m.jugadorId)+
+          '<div class="pos-datos num" style="margin-top:4px"><span>'+fmtTitulos(m.titulos)+" títulos</span><span>a "+fmtPrecio(m.precioEUR)+"</span><span>importe "+fmtEUR(m.importeEUR)+"</span></div>"+
+          (m.motivo?'<div style="margin-top:6px; color:var(--ink-2); font-size:13.5px">«'+esc(m.motivo)+"»</div>":"")+"</div></div>"));
+    });
+  }
+
+  /* reglas: jugadores */
+  var lr=document.getElementById("lista-jugadores-reglas"); lr.innerHTML="";
+  JUGADORES.forEach(function(j){ lr.appendChild(el('<div class="jugador-mini" style="--jcolor:'+COLORES[j.id]+'"><span class="avatar" aria-hidden="true">'+esc(j.nombre.charAt(0))+"</span><div class=\"t\"><b>"+esc(j.nombre)+" · "+esc(j.alias)+"</b><span>"+esc(j.descripcion)+"</span></div></div>")); });
+  if(!USER) lr.appendChild(el('<div class="jugador-mini" style="--jcolor:var(--c-jorge)"><span class="avatar" aria-hidden="true">?</span><div class="t"><b>Tú · EL RETADOR</b><span>Elige tu nombre y empieza tu partida para competir.</span></div></div>'));
+}
+
+/* ====== navegación por pestañas (una sola vez) ====== */
+var tabs=document.querySelectorAll(".tabbar button");
+Array.prototype.forEach.call(tabs,function(t){
+  t.addEventListener("click",function(){
+    Array.prototype.forEach.call(tabs,function(x){ x.setAttribute("aria-selected","false"); });
+    t.setAttribute("aria-selected","true");
+    Array.prototype.forEach.call(document.querySelectorAll(".panel"),function(p){ p.classList.remove("activo"); });
+    document.getElementById(t.dataset.panel).classList.add("activo");
+    window.scrollTo(0,0);
+  });
+});
+
+/* ====== onboarding ====== */
+var ovOnb=document.getElementById("overlay-onboarding");
+var inpNombre=document.getElementById("onb-nombre");
+var errOnb=document.getElementById("onb-error");
+function empezarPartida(){
+  var nom=(inpNombre.value||"").trim();
+  if(nom.length<2){ errOnb.textContent="Escribe tu nombre (al menos 2 letras)."; return; }
+  USER=crearUsuario(nom); guardarUsuario();
+  ovOnb.hidden=true; carteraSel="user"; pintarTodo();
+}
+document.getElementById("onb-empezar").addEventListener("click",empezarPartida);
+inpNombre.addEventListener("keydown",function(e){ if(e.key==="Enter") empezarPartida(); });
+
+/* ====== modal comprar / vender / actualizar ====== */
+var ovTrade=document.getElementById("overlay-trade");
+var tradeCampos=document.getElementById("trade-campos");
+var tradeError=document.getElementById("trade-error");
+var tradeTitulo=document.getElementById("trade-titulo");
+var tradeEyebrow=document.getElementById("trade-eyebrow");
+var tradeIntro=document.getElementById("trade-intro");
+var tradeConfirmar=document.getElementById("trade-confirmar");
+var tradeAccion=null, tradeIdx=null;
+function leerNum(id){ var e=document.getElementById(id); if(!e) return NaN; return parseFloat(String(e.value).replace(",",".")); }
+function cerrarTrade(){ ovTrade.hidden=true; tradeError.textContent=""; }
+document.getElementById("trade-cerrar").addEventListener("click",cerrarTrade);
+ovTrade.addEventListener("click",function(e){ if(e.target===ovTrade) cerrarTrade(); });
+function campo(id,label,attrs,ayuda){ return '<div class="campo"><label for="'+id+'">'+label+'</label><input id="'+id+'" '+attrs+'>'+(ayuda?'<span class="ayuda" id="'+id+'-ayuda">'+ayuda+'</span>':'')+'</div>'; }
+function actualizarCalc(){
+  var out=document.getElementById("f-calc"); if(!out) return;
+  var imp=leerNum("f-importe"), pr=leerNum("f-precio");
+  if(esNum(imp)&&esNum(pr)&&pr>0&&imp>0){ var t=imp/pr; out.innerHTML="≈ <b>"+t.toLocaleString("es-ES",{maximumFractionDigits:2})+"</b> títulos · caja después: <b>"+fmtEUR(Math.round(USER.caja-imp))+"</b>"; } else out.textContent="";
+}
+function abrirTrade(accion,idx){
+  if(!USER) return;
+  tradeAccion=accion; tradeIdx=idx; tradeError.textContent="";
+  if(accion==="comprar"){
+    tradeEyebrow.textContent="Nueva compra"; tradeTitulo.textContent="Añadir un valor";
+    tradeIntro.innerHTML="Caja disponible: <b>"+fmtEUR(Math.round(USER.caja))+"</b>. Tras pasar triaje y fundamentales, compra en el primer suelo del momentum.";
+    tradeCampos.innerHTML=campo("f-ticker","Ticker",'type="text" maxlength="12" autocomplete="off" placeholder="Ej. AMZN" style="text-transform:uppercase"')+
+      campo("f-nombre","Nombre (opcional)",'type="text" maxlength="40" autocomplete="off" placeholder="Ej. Amazon"')+
+      '<div class="grid2">'+campo("f-importe","Importe (€)",'type="number" inputmode="decimal" min="0" placeholder="20000"')+campo("f-precio","Precio de compra (€)",'type="number" inputmode="decimal" min="0" step="0.01" placeholder="Primer suelo"')+'</div>'+
+      '<span class="ayuda" id="f-calc"></span>';
+    tradeConfirmar.textContent="Confirmar compra";
+    ["f-importe","f-precio"].forEach(function(fid){ var e=document.getElementById(fid); if(e) e.addEventListener("input",actualizarCalc); });
+  } else if(accion==="vender"){
+    var p=USER.posiciones[idx]; if(!p) return;
+    tradeEyebrow.textContent="Venta"; tradeTitulo.textContent="Vender "+p.ticker;
+    tradeIntro.innerHTML=fmtTitulos(p.titulos)+" títulos · compraste a "+fmtPrecio(p.precioCompraEUR)+".";
+    tradeCampos.innerHTML=campo("f-precioventa","Precio de venta (€)",'type="number" inputmode="decimal" min="0" step="0.01" value="'+(esNum(p.precioActual)?p.precioActual:p.precioCompraEUR)+'"',"Se vende toda la posición y el importe vuelve a tu caja.");
+    tradeConfirmar.textContent="Confirmar venta";
+  } else {
+    var p2=USER.posiciones[idx]; if(!p2) return;
+    tradeEyebrow.textContent="Actualizar precio"; tradeTitulo.textContent=p2.ticker;
+    tradeIntro.textContent="Pon el precio de mercado de hoy para ver tu ganancia o pérdida.";
+    tradeCampos.innerHTML=campo("f-precioact","Precio actual (€)",'type="number" inputmode="decimal" min="0" step="0.01" value="'+(esNum(p2.precioActual)?p2.precioActual:p2.precioCompraEUR)+'"');
+    tradeConfirmar.textContent="Guardar precio";
+  }
+  ovTrade.hidden=false;
+  setTimeout(function(){ var f=tradeCampos.querySelector("input"); if(f) try{ f.focus(); }catch(e){} },80);
+}
+function confirmarCompra(){
+  var ticker=(document.getElementById("f-ticker").value||"").trim().toUpperCase();
+  var nombre=(document.getElementById("f-nombre").value||"").trim();
+  var imp=leerNum("f-importe"), pr=leerNum("f-precio");
+  if(!ticker){ tradeError.textContent="Escribe el ticker del valor."; return; }
+  if(!esNum(imp)||imp<=0){ tradeError.textContent="El importe no es válido."; return; }
+  if(!esNum(pr)||pr<=0){ tradeError.textContent="El precio de compra no es válido."; return; }
+  if(imp>USER.caja+0.5){ tradeError.textContent="No tienes caja suficiente (te quedan "+fmtEUR(Math.round(USER.caja))+")."; return; }
+  if(USER.posiciones.length>=JUEGO.maxPosiciones){ tradeError.textContent="Cartera llena: máximo 10 valores."; return; }
+  var titulos=imp/pr;
+  USER.posiciones.push({ ticker:ticker, nombre:nombre, titulos:titulos, precioCompraEUR:pr, costeEUR:imp, precioActual:pr, fechaPrecio:fechaCorta(hoyISO()) });
+  USER.caja-=imp;
+  USER.movimientos.push({ fecha:hoyISO(), tipo:"compra", ticker:ticker, titulos:titulos, precioEUR:pr, importeEUR:imp, motivo:"Compra en el primer suelo del momentum." });
+  guardarUsuario(); cerrarTrade(); carteraSel="user"; pintarTodo();
+}
+function confirmarVenta(){
+  var p=USER.posiciones[tradeIdx]; if(!p) return;
+  var pr=leerNum("f-precioventa"); if(!esNum(pr)||pr<=0){ tradeError.textContent="El precio de venta no es válido."; return; }
+  var imp=(esNum(p.titulos)?p.titulos:0)*pr; USER.caja+=imp;
+  USER.movimientos.push({ fecha:hoyISO(), tipo:"venta", ticker:p.ticker, titulos:p.titulos, precioEUR:pr, importeEUR:imp });
+  USER.posiciones.splice(tradeIdx,1);
+  guardarUsuario(); cerrarTrade(); carteraSel="user"; pintarTodo();
+}
+function confirmarActualizar(){
+  var p=USER.posiciones[tradeIdx]; if(!p) return;
+  var pr=leerNum("f-precioact"); if(!esNum(pr)||pr<=0){ tradeError.textContent="El precio no es válido."; return; }
+  p.precioActual=pr; p.fechaPrecio=fechaCorta(hoyISO());
+  guardarUsuario(); cerrarTrade(); carteraSel="user"; pintarTodo();
+}
+tradeConfirmar.addEventListener("click",function(){ if(tradeAccion==="comprar") confirmarCompra(); else if(tradeAccion==="vender") confirmarVenta(); else confirmarActualizar(); });
+function reiniciarPartida(){
+  if(!window.confirm("¿Reiniciar tu partida? Se borran tus valores y tu caja vuelve a 500.000 €.")) return;
+  try{ localStorage.removeItem(LS_KEY); }catch(e){}
+  USER=null; carteraSel=null; cerrarTrade(); pintarTodo(); ovOnb.hidden=false;
+  setTimeout(function(){ try{ inpNombre.value=""; inpNombre.focus(); }catch(e){} },60);
+}
+
+/* ====== init ====== */
+pintarTodo();
+if(!USER){ ovOnb.hidden=false; setTimeout(function(){ try{ inpNombre.focus(); }catch(e){} },80); }
+
+})();
+</script>
+</body>
+</html>
