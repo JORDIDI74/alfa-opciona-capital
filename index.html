@@ -1305,10 +1305,14 @@ function abrirTrade(accion,idx){
     tradeIntro.innerHTML="Caja disponible: <b>"+fmtEUR(Math.round(USER.caja))+"</b>. Tras pasar triaje y fundamentales, compra en el primer suelo del momentum.";
     tradeCampos.innerHTML=campo("f-ticker","Ticker",'type="text" maxlength="12" autocomplete="off" placeholder="Ej. AMZN" style="text-transform:uppercase"')+
       campo("f-nombre","Nombre (opcional)",'type="text" maxlength="40" autocomplete="off" placeholder="Ej. Amazon"')+
-      '<div class="grid2">'+campo("f-importe","Importe (€)",'type="number" inputmode="decimal" min="0" placeholder="20000"')+campo("f-precio","Precio de compra (€)",'type="number" inputmode="decimal" min="0" step="0.01" placeholder="Primer suelo"')+'</div>'+
+      '<div class="grid2">'+
+        campo("f-importe","Importe a invertir (€)",'type="number" inputmode="decimal" min="0" value="20000"',"Cuánto pones en este valor.")+
+        campo("f-precio","Precio de compra (€)",'type="number" inputmode="decimal" min="0" step="0.01" placeholder="Ej. 45,30"',"El primer suelo del momentum.")+
+      '</div>'+
       '<span class="ayuda" id="f-calc"></span>';
     tradeConfirmar.textContent="Confirmar compra";
     ["f-importe","f-precio"].forEach(function(fid){ var e=document.getElementById(fid); if(e) e.addEventListener("input",actualizarCalc); });
+    actualizarCalc();
   } else if(accion==="vender"){
     var p=USER.posiciones[idx]; if(!p) return;
     tradeEyebrow.textContent="Venta"; tradeTitulo.textContent="Vender "+p.ticker;
@@ -1329,9 +1333,9 @@ function confirmarCompra(){
   var ticker=(document.getElementById("f-ticker").value||"").trim().toUpperCase();
   var nombre=(document.getElementById("f-nombre").value||"").trim();
   var imp=leerNum("f-importe"), pr=leerNum("f-precio");
-  if(!ticker){ tradeError.textContent="Escribe el ticker del valor."; return; }
-  if(!esNum(imp)||imp<=0){ tradeError.textContent="El importe no es válido."; return; }
-  if(!esNum(pr)||pr<=0){ tradeError.textContent="El precio de compra no es válido."; return; }
+  if(!ticker){ tradeError.textContent="Escribe el ticker del valor (ej. AMZN)."; return; }
+  if(!esNum(imp)||imp<=0){ tradeError.textContent="Escribe el importe: cuánto quieres invertir en euros."; return; }
+  if(!esNum(pr)||pr<=0){ tradeError.textContent="Falta el precio de compra: escribe el precio por acción (el primer suelo)."; return; }
   if(imp>USER.caja+0.5){ tradeError.textContent="No tienes caja suficiente (te quedan "+fmtEUR(Math.round(USER.caja))+")."; return; }
   if(USER.posiciones.length>=JUEGO.maxPosiciones){ tradeError.textContent="Cartera llena: máximo 10 valores."; return; }
   var titulos=imp/pr;
