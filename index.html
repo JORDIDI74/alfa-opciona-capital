@@ -415,6 +415,14 @@ footer{
 .campo .ayuda b{color:var(--ink-2)}
 .grid2{display:grid; grid-template-columns:1fr 1fr; gap:12px}
 .modal-error{color:var(--down); font-size:13px; font-weight:600; margin:-4px 0 12px; min-height:0}
+#trade-cot:empty{display:none}
+#trade-cot{
+  background:var(--surface-2); border:1px solid var(--line-strong);
+  border-radius:14px; padding:12px 14px; margin:4px 0 12px;
+}
+.cot-linea{font-size:15px; color:var(--ink)}
+.cot-sub{font-size:13px; color:var(--ink-2); margin-top:4px}
+.cot-cargando{font-size:14px; color:var(--ink-2)}
 .modal-acciones{display:flex; flex-direction:column; gap:10px; margin-top:6px}
 .cerrar-modal{
   position:absolute; top:14px; right:16px; width:36px; height:36px; border-radius:50%;
@@ -547,7 +555,7 @@ footer{
       <div class="card">
         <span class="paso-skill">PASO 3 · analisis-tecnico-momentum</span>
         <h3>Momentum — el precio de entrada</h3>
-        <p>Con el «sí» de valor ya dado, el gráfico fija el <b>precio de compra: el primer suelo</b> (el primer soporte por debajo del precio actual). Ahí se coloca la orden. El importe lo marca la regla de tamaño de cada jugador; el gráfico nunca es motivo de compra, solo el punto de entrada.</p>
+        <p>Con el «sí» de valor ya dado, el gráfico marca <b>cuándo</b> entrar: el <b>primer suelo</b> (el primer soporte por debajo del precio actual). Cuando el mercado llega ahí, se da la orden — y esa orden se ejecuta siempre a la <b>cotización real</b> del momento. El importe lo marca la regla de tamaño de cada jugador; el gráfico nunca es motivo de compra, solo el punto de entrada.</p>
         <details>
           <summary>Qué calcula y cómo fija los niveles</summary>
           <ul>
@@ -602,7 +610,8 @@ footer{
         <div class="regla"><span class="icono num">€</span><span><b>500.000&nbsp;€ de capital inicial</b> por jugador. Dinero ficticio: es un juego de aprendizaje.</span></div>
         <div class="regla"><span class="icono num">10</span><span><b>Máximo 10 valores</b> en cartera por jugador, en todo momento.</span></div>
         <div class="regla"><span class="icono num">€</span><span><b>Tamaño de la posición:</b> Tesis Mensuales compra <b>20.000&nbsp;$ por valor</b>, el día de la tesis. Claude y cada jugador fijan su propio tamaño.</span></div>
-        <div class="regla"><span class="icono">↧</span><span><b>Precio de entrada:</b> lo marca el <b>primer suelo</b> (primer soporte) del análisis de momentum.</span></div>
+        <div class="regla"><span class="icono">↧</span><span><b>Cuándo entrar:</b> lo marca el <b>primer suelo</b> (primer soporte) del análisis de momentum.</span></div>
+        <div class="regla"><span class="icono">✓</span><span><b>Precios reales, sin trampas:</b> toda orden se ejecuta a la <b>cotización real del mercado</b> en ese momento. No se puede comprar por debajo ni vender por encima del precio real.</span></div>
         <div class="regla"><span class="icono num">12</span><span><b>12 meses de competición.</b> Foto mensual el último día hábil de cada mes; gana quien tenga el mayor valor total (posiciones + caja).</span></div>
         <div class="regla"><span class="icono">⚖</span><span><b>El embudo es obligatorio:</b> triaje → fundamentales → momentum → puerta de decisión. Sin atajos, también para Claude.</span></div>
         <div class="regla"><span class="icono">✓</span><span><b>Datos reales siempre:</b> precios con fuente y fecha. Si falta un dato, se marca «pendiente»; jamás se inventa una cifra.</span></div>
@@ -680,6 +689,7 @@ footer{
     <h2 id="trade-titulo">Añadir un valor</h2>
     <p class="intro" id="trade-intro">Tras pasar triaje y fundamentales, compra en el <b>primer suelo</b> del momentum.</p>
     <div id="trade-campos"><!-- JS rellena los campos según la acción --></div>
+    <div id="trade-cot"><!-- JS: cotización real --></div>
     <p class="modal-error" id="trade-error"></p>
     <div class="modal-acciones">
       <button class="btn-primario" id="trade-confirmar">Confirmar</button>
@@ -1143,13 +1153,14 @@ function pintarCartera(id){
         '<div class="pos-datos num"><span>'+fmtTitulos(p.titulos)+' títulos</span><span>Compra '+fmtPrecio(p.precioCompraEUR)+'</span>'+
           '<span>Actual '+(esNum(p.precioActual)?fmtPrecio(p.precioActual)+(p.fechaPrecio?" ("+esc(p.fechaPrecio)+")":""):"pendiente")+'</span>'+
           (plPct!=null?'<span class="chip '+(pl>=0?"up":"down")+'">'+(pl>=0?"▲ ":"▼ ")+fmtPct(plPct)+'</span>':'')+'</div>'+
-        (esUsuario?('<div class="pos-acciones"><button class="btn-secundario" data-accion="actualizar" data-idx="'+idx+'">Actualizar precio</button><button class="btn-secundario" data-accion="vender" data-idx="'+idx+'">Vender</button></div>'):'')+
+        (esUsuario?('<div class="pos-acciones"><button class="btn-secundario" data-accion="vender" data-idx="'+idx+'">Vender a precio real</button></div>'):'')+
       '</div>';
     }).join("")+"</div>";
   }
   if(esUsuario){
     var lleno=posiciones.length>=JUEGO.maxPosiciones, sinCaja=j.caja<1;
     html+='<button class="btn-añadir" id="btn-comprar"'+((lleno||sinCaja)?' disabled':'')+'>+ Añadir un valor a mi cartera</button>';
+    if(posiciones.length) html+='<div style="margin-top:10px"><button class="btn-secundario" id="btn-actualizar" style="width:100%">Actualizar precios de mercado</button></div>';
     if(lleno) html+='<p class="nota-chart" style="text-align:center">Cartera llena (10 de 10). Vende un valor para poder comprar otro.</p>';
     html+='<div style="text-align:center; margin-top:20px"><button class="btn-peligro" id="btn-reiniciar">Reiniciar mi partida</button></div>';
   }
@@ -1157,6 +1168,7 @@ function pintarCartera(id){
   if(esUsuario){
     var bC=document.getElementById("btn-comprar"); if(bC) bC.addEventListener("click",function(){ abrirTrade("comprar",null); });
     var bR=document.getElementById("btn-reiniciar"); if(bR) bR.addEventListener("click",reiniciarPartida);
+    var bA=document.getElementById("btn-actualizar"); if(bA) bA.addEventListener("click",actualizarPrecios);
     Array.prototype.forEach.call(detalle.querySelectorAll(".pos-acciones button"),function(btn){ btn.addEventListener("click",function(){ abrirTrade(btn.getAttribute("data-accion"),parseInt(btn.getAttribute("data-idx"),10)); }); });
   }
 }
@@ -1278,87 +1290,176 @@ function empezarPartida(){
 document.getElementById("onb-empezar").addEventListener("click",empezarPartida);
 inpNombre.addEventListener("keydown",function(e){ if(e.key==="Enter") empezarPartida(); });
 
-/* ====== modal comprar / vender / actualizar ====== */
+/* ====== cotización real: obligatoria para operar ====== */
+/* Regla del juego: no se puede comprar por debajo ni vender por encima del precio
+   real de mercado. La orden se ejecuta SIEMPRE a la cotización del momento. */
+var FX_CACHE={};
+function urlYahoo(sym){ return "https://query1.finance.yahoo.com/v8/finance/chart/"+encodeURIComponent(sym)+"?range=1d&interval=1d"; }
+function viaProxy(u){ return "https://corsproxy.io/?"+encodeURIComponent(u); }
+function metaYahoo(sym){
+  return fetch(viaProxy(urlYahoo(sym)),{cache:"no-store"}).then(function(r){
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    return r.json();
+  }).then(function(j){
+    var m=j&&j.chart&&j.chart.result&&j.chart.result[0]&&j.chart.result[0].meta;
+    if(!m||!esNum(m.regularMarketPrice)) throw new Error("sin precio");
+    return m;
+  });
+}
+function tasaAEur(moneda){
+  if(!moneda||moneda==="EUR") return Promise.resolve(1);
+  var c=FX_CACHE[moneda];
+  if(c&&(Date.now()-c.ts)<600000) return Promise.resolve(c.tasa);
+  return metaYahoo(moneda+"EUR=X").then(function(m){
+    FX_CACHE[moneda]={tasa:m.regularMarketPrice,ts:Date.now()};
+    return m.regularMarketPrice;
+  });
+}
+function cotizacionReal(ticker){
+  return metaYahoo(ticker).then(function(m){
+    return tasaAEur(m.currency).then(function(tasa){
+      return { ticker:(m.symbol||ticker), precioOrig:m.regularMarketPrice, moneda:(m.currency||"EUR"),
+               tasa:tasa, precioEUR:m.regularMarketPrice*tasa, nombre:(m.longName||m.shortName||"") };
+    });
+  });
+}
+
+/* ====== modal comprar / vender ====== */
 var ovTrade=document.getElementById("overlay-trade");
 var tradeCampos=document.getElementById("trade-campos");
+var tradeCot=document.getElementById("trade-cot");
 var tradeError=document.getElementById("trade-error");
 var tradeTitulo=document.getElementById("trade-titulo");
 var tradeEyebrow=document.getElementById("trade-eyebrow");
 var tradeIntro=document.getElementById("trade-intro");
 var tradeConfirmar=document.getElementById("trade-confirmar");
-var tradeAccion=null, tradeIdx=null;
+var tradeAccion=null, tradeIdx=null, cotPendiente=null;
+
 function leerNum(id){ var e=document.getElementById(id); if(!e) return NaN; return parseFloat(String(e.value).replace(",",".")); }
-function cerrarTrade(){ ovTrade.hidden=true; tradeError.textContent=""; }
+function cerrarTrade(){ ovTrade.hidden=true; tradeError.textContent=""; tradeCot.innerHTML=""; cotPendiente=null; tradeConfirmar.disabled=false; }
 document.getElementById("trade-cerrar").addEventListener("click",cerrarTrade);
 ovTrade.addEventListener("click",function(e){ if(e.target===ovTrade) cerrarTrade(); });
-function campo(id,label,attrs,ayuda){ return '<div class="campo"><label for="'+id+'">'+label+'</label><input id="'+id+'" '+attrs+'>'+(ayuda?'<span class="ayuda" id="'+id+'-ayuda">'+ayuda+'</span>':'')+'</div>'; }
-function actualizarCalc(){
-  var out=document.getElementById("f-calc"); if(!out) return;
-  var imp=leerNum("f-importe"), pr=leerNum("f-precio");
-  if(esNum(imp)&&esNum(pr)&&pr>0&&imp>0){ var t=imp/pr; out.innerHTML="≈ <b>"+t.toLocaleString("es-ES",{maximumFractionDigits:2})+"</b> títulos · caja después: <b>"+fmtEUR(Math.round(USER.caja-imp))+"</b>"; } else out.textContent="";
+function campo(id,label,attrs,ayuda){
+  return '<div class="campo"><label for="'+id+'">'+label+'</label><input id="'+id+'" '+attrs+'>'+(ayuda?'<span class="ayuda">'+ayuda+'</span>':'')+'</div>';
 }
+function ocupado(si,msg){
+  tradeConfirmar.disabled=!!si;
+  if(si) tradeCot.innerHTML='<div class="cot-cargando">'+esc(msg||"Consultando…")+'</div>';
+}
+function pintaCot(c, extra){
+  tradeCot.innerHTML='<div class="cot-linea"><b>'+esc(c.ticker)+'</b> · precio real ahora: <b>'+fmtPrecio(c.precioEUR)+'</b>'+
+    (c.moneda!=="EUR" ? ' <span class="cot-sub">('+c.precioOrig.toLocaleString("es-ES",{minimumFractionDigits:2,maximumFractionDigits:2})+' '+esc(c.moneda)+')</span>' : '')+
+    '</div><div class="cot-sub">'+extra+'</div>';
+}
+
 function abrirTrade(accion,idx){
   if(!USER) return;
-  tradeAccion=accion; tradeIdx=idx; tradeError.textContent="";
+  tradeAccion=accion; tradeIdx=idx; tradeError.textContent=""; tradeCot.innerHTML=""; cotPendiente=null; tradeConfirmar.disabled=false;
   if(accion==="comprar"){
-    tradeEyebrow.textContent="Nueva compra"; tradeTitulo.textContent="Añadir un valor";
-    tradeIntro.innerHTML="Caja disponible: <b>"+fmtEUR(Math.round(USER.caja))+"</b>. Tras pasar triaje y fundamentales, compra en el primer suelo del momentum.";
+    tradeEyebrow.textContent="Nueva compra";
+    tradeTitulo.textContent="Añadir un valor";
+    tradeIntro.innerHTML="Caja disponible: <b>"+fmtEUR(Math.round(USER.caja))+"</b>. La compra se ejecuta al <b>precio real de mercado</b> de este momento.";
     tradeCampos.innerHTML=campo("f-ticker","Ticker",'type="text" maxlength="12" autocomplete="off" placeholder="Ej. AMZN" style="text-transform:uppercase"')+
       campo("f-nombre","Nombre (opcional)",'type="text" maxlength="40" autocomplete="off" placeholder="Ej. Amazon"')+
-      '<div class="grid2">'+
-        campo("f-importe","Importe a invertir (€)",'type="number" inputmode="decimal" min="0" value="20000"',"Cuánto pones en este valor.")+
-        campo("f-precio","Precio de compra (€)",'type="number" inputmode="decimal" min="0" step="0.01" placeholder="Ej. 45,30"',"El primer suelo del momentum.")+
-      '</div>'+
-      '<span class="ayuda" id="f-calc"></span>';
-    tradeConfirmar.textContent="Confirmar compra";
-    ["f-importe","f-precio"].forEach(function(fid){ var e=document.getElementById(fid); if(e) e.addEventListener("input",actualizarCalc); });
-    actualizarCalc();
-  } else if(accion==="vender"){
-    var p=USER.posiciones[idx]; if(!p) return;
-    tradeEyebrow.textContent="Venta"; tradeTitulo.textContent="Vender "+p.ticker;
-    tradeIntro.innerHTML=fmtTitulos(p.titulos)+" títulos · compraste a "+fmtPrecio(p.precioCompraEUR)+".";
-    tradeCampos.innerHTML=campo("f-precioventa","Precio de venta (€)",'type="number" inputmode="decimal" min="0" step="0.01" value="'+(esNum(p.precioActual)?p.precioActual:p.precioCompraEUR)+'"',"Se vende toda la posición y el importe vuelve a tu caja.");
-    tradeConfirmar.textContent="Confirmar venta";
+      campo("f-importe","Importe a invertir (€)",'type="number" inputmode="decimal" min="0" value="20000"',"Cuánto pones en este valor.");
+    tradeConfirmar.textContent="Consultar precio y comprar";
+    ["f-ticker","f-importe"].forEach(function(fid){
+      var e=document.getElementById(fid);
+      if(e) e.addEventListener("input",function(){ cotPendiente=null; tradeCot.innerHTML=""; tradeConfirmar.textContent="Consultar precio y comprar"; });
+    });
   } else {
-    var p2=USER.posiciones[idx]; if(!p2) return;
-    tradeEyebrow.textContent="Actualizar precio"; tradeTitulo.textContent=p2.ticker;
-    tradeIntro.textContent="Pon el precio de mercado de hoy para ver tu ganancia o pérdida.";
-    tradeCampos.innerHTML=campo("f-precioact","Precio actual (€)",'type="number" inputmode="decimal" min="0" step="0.01" value="'+(esNum(p2.precioActual)?p2.precioActual:p2.precioCompraEUR)+'"');
-    tradeConfirmar.textContent="Guardar precio";
+    var p=USER.posiciones[idx]; if(!p) return;
+    tradeEyebrow.textContent="Venta";
+    tradeTitulo.textContent="Vender "+p.ticker;
+    tradeIntro.innerHTML=fmtTitulos(p.titulos)+" títulos · compraste a "+fmtPrecio(p.precioCompraEUR)+". La venta se ejecuta al <b>precio real de mercado</b> de este momento.";
+    tradeCampos.innerHTML="";
+    tradeConfirmar.textContent="Confirmar venta";
+    ocupado(true,"Consultando precio real…");
+    cotizacionReal(p.ticker).then(function(c){
+      cotPendiente={cot:c, idx:idx};
+      var imp=(esNum(p.titulos)?p.titulos:0)*c.precioEUR;
+      var pl=imp-(esNum(p.costeEUR)?p.costeEUR:0);
+      pintaCot(c,"Recibirás <b>"+fmtEUR(Math.round(imp))+"</b> por "+fmtTitulos(p.titulos)+" títulos · "+(pl>=0?"ganancia":"pérdida")+" de <b>"+fmtEUR(Math.round(Math.abs(pl)))+"</b>");
+      ocupado(false);
+      tradeConfirmar.textContent="Confirmar venta a "+fmtPrecio(c.precioEUR);
+    }).catch(function(){
+      ocupado(false); tradeConfirmar.disabled=true; tradeCot.innerHTML="";
+      tradeError.textContent="No he podido consultar el precio real de "+p.ticker+". Inténtalo en un momento.";
+    });
   }
   ovTrade.hidden=false;
   setTimeout(function(){ var f=tradeCampos.querySelector("input"); if(f) try{ f.focus(); }catch(e){} },80);
 }
-function confirmarCompra(){
+
+function flujoCompra(){
+  if(cotPendiente){ ejecutarCompra(); return; }
   var ticker=(document.getElementById("f-ticker").value||"").trim().toUpperCase();
-  var nombre=(document.getElementById("f-nombre").value||"").trim();
-  var imp=leerNum("f-importe"), pr=leerNum("f-precio");
+  var imp=leerNum("f-importe");
   if(!ticker){ tradeError.textContent="Escribe el ticker del valor (ej. AMZN)."; return; }
   if(!esNum(imp)||imp<=0){ tradeError.textContent="Escribe el importe: cuánto quieres invertir en euros."; return; }
-  if(!esNum(pr)||pr<=0){ tradeError.textContent="Falta el precio de compra: escribe el precio por acción (el primer suelo)."; return; }
   if(imp>USER.caja+0.5){ tradeError.textContent="No tienes caja suficiente (te quedan "+fmtEUR(Math.round(USER.caja))+")."; return; }
   if(USER.posiciones.length>=JUEGO.maxPosiciones){ tradeError.textContent="Cartera llena: máximo 10 valores."; return; }
+  if(USER.posiciones.some(function(p){ return p.ticker===ticker; })){ tradeError.textContent="Ya tienes "+ticker+" en cartera."; return; }
+  tradeError.textContent="";
+  ocupado(true,"Consultando precio real de "+ticker+"…");
+  cotizacionReal(ticker).then(function(c){
+    var nombre=(document.getElementById("f-nombre").value||"").trim();
+    cotPendiente={cot:c, importe:imp, ticker:ticker, nombre:nombre};
+    var tit=imp/c.precioEUR;
+    pintaCot(c,"Comprarás <b>"+tit.toLocaleString("es-ES",{maximumFractionDigits:2})+"</b> títulos por "+fmtEUR(Math.round(imp)));
+    ocupado(false);
+    tradeConfirmar.textContent="Confirmar compra a "+fmtPrecio(c.precioEUR);
+  }).catch(function(){
+    ocupado(false); tradeCot.innerHTML="";
+    tradeError.textContent="No he podido consultar el precio real de "+ticker+". Comprueba el ticker o inténtalo en un momento.";
+  });
+}
+function ejecutarCompra(){
+  var d=cotPendiente; if(!d) return;
+  var pr=d.cot.precioEUR, imp=d.importe;
+  if(!esNum(pr)||pr<=0){ tradeError.textContent="Precio no disponible."; return; }
+  if(imp>USER.caja+0.5){ tradeError.textContent="No tienes caja suficiente."; return; }
   var titulos=imp/pr;
-  USER.posiciones.push({ ticker:ticker, nombre:nombre, titulos:titulos, precioCompraEUR:pr, costeEUR:imp, precioActual:pr, fechaPrecio:fechaCorta(hoyISO()) });
+  USER.posiciones.push({ ticker:d.ticker, nombre:d.nombre||d.cot.nombre||"", titulos:titulos,
+    precioCompraEUR:pr, costeEUR:imp, precioActual:pr, fechaPrecio:fechaCorta(hoyISO()) });
   USER.caja-=imp;
-  USER.movimientos.push({ fecha:hoyISO(), tipo:"compra", ticker:ticker, titulos:titulos, precioEUR:pr, importeEUR:imp, motivo:"Compra en el primer suelo del momentum." });
+  USER.movimientos.push({ fecha:hoyISO(), tipo:"compra", ticker:d.ticker, titulos:titulos, precioEUR:pr, importeEUR:imp,
+    motivo:"Compra al precio real de mercado." });
   guardarUsuario(); cerrarTrade(); carteraSel="user"; pintarTodo();
 }
-function confirmarVenta(){
-  var p=USER.posiciones[tradeIdx]; if(!p) return;
-  var pr=leerNum("f-precioventa"); if(!esNum(pr)||pr<=0){ tradeError.textContent="El precio de venta no es válido."; return; }
-  var imp=(esNum(p.titulos)?p.titulos:0)*pr; USER.caja+=imp;
-  USER.movimientos.push({ fecha:hoyISO(), tipo:"venta", ticker:p.ticker, titulos:p.titulos, precioEUR:pr, importeEUR:imp });
-  USER.posiciones.splice(tradeIdx,1);
+function flujoVenta(){
+  if(!cotPendiente){ tradeError.textContent="Espera a que llegue el precio real."; return; }
+  var p=USER.posiciones[cotPendiente.idx]; if(!p) return;
+  var pr=cotPendiente.cot.precioEUR;
+  var imp=(esNum(p.titulos)?p.titulos:0)*pr;
+  USER.caja+=imp;
+  USER.movimientos.push({ fecha:hoyISO(), tipo:"venta", ticker:p.ticker, titulos:p.titulos, precioEUR:pr, importeEUR:imp,
+    motivo:"Venta al precio real de mercado." });
+  USER.posiciones.splice(cotPendiente.idx,1);
   guardarUsuario(); cerrarTrade(); carteraSel="user"; pintarTodo();
 }
-function confirmarActualizar(){
-  var p=USER.posiciones[tradeIdx]; if(!p) return;
-  var pr=leerNum("f-precioact"); if(!esNum(pr)||pr<=0){ tradeError.textContent="El precio no es válido."; return; }
-  p.precioActual=pr; p.fechaPrecio=fechaCorta(hoyISO());
-  guardarUsuario(); cerrarTrade(); carteraSel="user"; pintarTodo();
+tradeConfirmar.addEventListener("click",function(){
+  if(tradeAccion==="comprar") flujoCompra();
+  else flujoVenta();
+});
+
+/* Actualizar TODOS los precios de la cartera con la cotización real */
+function actualizarPrecios(){
+  if(!USER||!USER.posiciones.length) return;
+  var btn=document.getElementById("btn-actualizar");
+  if(btn){ btn.disabled=true; btn.textContent="Actualizando precios…"; }
+  var tareas=USER.posiciones.map(function(p){
+    return cotizacionReal(p.ticker).then(function(c){
+      p.precioActual=c.precioEUR; p.fechaPrecio=fechaCorta(hoyISO()); return true;
+    }).catch(function(){ return false; });
+  });
+  Promise.all(tareas).then(function(res){
+    var fallos=res.filter(function(x){ return !x; }).length;
+    guardarUsuario(); carteraSel="user"; pintarTodo();
+    if(fallos) window.alert("No he podido actualizar "+fallos+" valor(es). Inténtalo en un momento.");
+  });
 }
-tradeConfirmar.addEventListener("click",function(){ if(tradeAccion==="comprar") confirmarCompra(); else if(tradeAccion==="vender") confirmarVenta(); else confirmarActualizar(); });
+
 function activarPanel(panelId){
   var tabs=document.querySelectorAll(".tabbar button");
   Array.prototype.forEach.call(tabs,function(x){ x.setAttribute("aria-selected", x.dataset.panel===panelId ? "true":"false"); });
