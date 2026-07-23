@@ -1090,6 +1090,7 @@ var ESTADO = JSON.parse(document.getElementById("estado-juego").textContent);
 var JUEGO = ESTADO.juego;
 var BENCH = ESTADO.benchmarks || ESTADO.jugadores || [];
 var LS_KEY = "alfa-opciona-user-v1";
+var LS_PRECIOS = "alfa-opciona-precios-v1";
 var COLORES = { tesis:"var(--c-tesis)", claude:"var(--c-claude)", user:"var(--c-jorge)" };
 var MARCAS  = { tesis:"circulo", claude:"cuadrado", user:"rombo" };
 var MESES = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
@@ -1141,6 +1142,25 @@ function crearUsuario(nombre){
     fotos:[{ mes:mesISO(), valor:JUEGO.capitalInicial }] };
 }
 var USER = cargarUsuario();
+
+/* Precios de las carteras de referencia, refrescados en este dispositivo. */
+function cargarPrecios(){ try{ return JSON.parse(localStorage.getItem(LS_PRECIOS)||"{}")||{}; }catch(e){ return {}; } }
+function guardarPrecios(m){ try{ localStorage.setItem(LS_PRECIOS, JSON.stringify(m)); }catch(e){} }
+function aplicarPreciosGuardados(){
+  var g=cargarPrecios();
+  BENCH.forEach(function(b){
+    (b.posiciones||[]).forEach(function(p){
+      var s=g[p.ticker];
+      if(s && esNum(s.precioEUR)){
+        p.precioActual=s.precioEUR;
+        if(esNum(s.precioOrig)) p.precioActualOrig=s.precioOrig;
+        if(s.moneda) p.moneda=s.moneda;
+        if(s.fecha) p.fechaPrecio=s.fecha;
+      }
+    });
+  });
+}
+aplicarPreciosGuardados();
 function snapshotUsuario(){
   if(!USER) return;
   if(!USER.fotos) USER.fotos=[];
@@ -1317,7 +1337,7 @@ function pintarCartera(id){
   if(esUsuario){
     var lleno=posiciones.length>=JUEGO.maxPosiciones, sinCaja=j.caja<1;
     html+='<button class="btn-añadir" id="btn-comprar"'+((lleno||sinCaja)?' disabled':'')+'>+ Añadir un valor a mi cartera</button>';
-    if(posiciones.length) html+='<div style="margin-top:10px"><button class="btn-secundario" id="btn-actualizar" style="width:100%">Actualizar precios de mercado</button></div>';
+    html+='<div style="margin-top:10px"><button class="btn-secundario" id="btn-actualizar" style="width:100%">Actualizar precios de mercado</button></div>';
     if(lleno) html+='<p class="nota-chart" style="text-align:center">Cartera llena (10 de 10). Vende un valor para poder comprar otro.</p>';
     html+='<div style="text-align:center; margin-top:20px"><button class="btn-peligro" id="btn-reiniciar">Reiniciar mi partida</button></div>';
   }
@@ -1351,9 +1371,11 @@ function pintarTodo(){
       '<div class="pj-quien">Juegas como <b>'+esc(USER.nombre)+'</b> · '+fmtEUR(Math.round(vU.total))+' · '+(USER.posiciones||[]).length+'/'+JUEGO.maxPosiciones+' valores</div>'+
       '<div class="pj-acciones">'+
         '<button class="btn-primario" id="cta-comprar">＋ Comprar un valor</button>'+
+        '<button class="btn-secundario" id="cta-actualizar">Actualizar precios</button>'+
         '<button class="btn-secundario" id="cta-cambiar">Cambiar jugador</button>'+
       '</div></div>';
     document.getElementById("cta-comprar").addEventListener("click",function(){ irACarteras(); abrirTrade("comprar",null); });
+    document.getElementById("cta-actualizar").addEventListener("click",actualizarPrecios);
     document.getElementById("cta-cambiar").addEventListener("click",cambiarJugador);
   } else { accion.innerHTML=""; }
 
@@ -1385,7 +1407,7 @@ function pintarTodo(){
   dibujarGrafico();
   var ley=document.getElementById("leyenda"); ley.innerHTML="";
   JUGADORES.forEach(function(j){ ley.appendChild(el('<span><i class="punto" style="--pc:'+COLORES[j.id]+'"></i>'+esc(j.nombre)+'</span>')); });
-  document.getElementById("nota-chart").textContent = fotos.length>=2 ? "Toca el gráfico para ver los valores de cada mes." : "La primera curva aparecerá con la foto de cierre de "+mesLargo(JUEGO.mesArranque)+". Hasta entonces, empate a "+fmtEUR(JUEGO.capitalInicial)+".";
+  document.getElementById("nota-chart").textContent = fotos.length>=2 ? "Toca el gráfico para ver los valores de cada mes." : "";
   var filas=fotos.map(function(f){ return "<tr><td>"+esc(etiquetaMes(f.mes,f.etiqueta))+"</td>"+JUGADORES.map(function(j){ return '<td class="num">'+fmtEUR(f.valores[j.id])+"</td>"; }).join("")+"</tr>"; }).join("");
   tablaWrap.innerHTML='<table class="tabla-datos"><thead><tr><th scope="col">Mes</th>'+JUGADORES.map(function(j){ return '<th scope="col">'+esc(j.nombre)+"</th>"; }).join("")+"</tr></thead><tbody>"+filas+"</tbody></table>";
 
@@ -1645,21 +1667,41 @@ tradeConfirmar.addEventListener("click",function(){
 });
 
 /* Actualizar TODOS los precios de la cartera con la cotización real */
+/* Refresca TODAS las carteras (la tuya y las dos de referencia) con cotizaciones reales.
+   Los precios de las carteras de referencia se guardan en este dispositivo, para que la
+   clasificación siga actualizada al volver a abrir. */
+function todasLasPosiciones(){
+  var todas=[];
+  BENCH.forEach(function(b){ (b.posiciones||[]).forEach(function(p){ todas.push(p); }); });
+  if(USER) (USER.posiciones||[]).forEach(function(p){ todas.push(p); });
+  return todas;
+}
 function actualizarPrecios(){
-  if(!USER||!USER.posiciones.length) return;
-  var btn=document.getElementById("btn-actualizar");
-  if(btn){ btn.disabled=true; btn.textContent="Actualizando precios…"; }
-  var tareas=USER.posiciones.map(function(p){
-    return cotizacionReal(p.ticker).then(function(c){
-      p.precioActual=c.precioEUR; p.fechaPrecio=fechaCorta(hoyISO());
-      p.moneda=c.moneda; p.precioActualOrig=c.precioOrig;
-      if(p.precioCompraOrig==null && esNum(p.precioCompraEUR) && esNum(c.tasa) && c.tasa>0) p.precioCompraOrig=p.precioCompraEUR/c.tasa;
-      return true;
-    }).catch(function(){ return false; });
+  var posis=todasLasPosiciones();
+  if(!posis.length) return;
+  var botones=[document.getElementById("btn-actualizar"), document.getElementById("cta-actualizar")].filter(Boolean);
+  botones.forEach(function(b){ b.disabled=true; b.dataset.txt=b.textContent; b.textContent="Actualizando precios…"; });
+  /* un ticker se consulta una sola vez aunque esté en varias carteras */
+  var tickers=[]; posis.forEach(function(p){ if(tickers.indexOf(p.ticker)<0) tickers.push(p.ticker); });
+  var mapa={}, fallos=0;
+  var tareas=tickers.map(function(tk){
+    return cotizacionReal(tk).then(function(c){ mapa[tk]=c; }).catch(function(){ fallos++; });
   });
-  Promise.all(tareas).then(function(res){
-    var fallos=res.filter(function(x){ return !x; }).length;
-    guardarUsuario(); carteraSel="user"; pintarTodo();
+  Promise.all(tareas).then(function(){
+    var hoyCorta=fechaCorta(hoyISO());
+    posis.forEach(function(p){
+      var c=mapa[p.ticker]; if(!c) return;
+      p.precioActual=c.precioEUR; p.precioActualOrig=c.precioOrig; p.moneda=c.moneda; p.fechaPrecio=hoyCorta;
+      if(p.precioCompraOrig==null && esNum(p.precioCompraEUR) && esNum(c.tasa) && c.tasa>0) p.precioCompraOrig=p.precioCompraEUR/c.tasa;
+    });
+    /* guardar: la partida del usuario y los precios de las carteras de referencia */
+    guardarUsuario();
+    var guardados=cargarPrecios();
+    Object.keys(mapa).forEach(function(tk){
+      guardados[tk]={precioEUR:mapa[tk].precioEUR, precioOrig:mapa[tk].precioOrig, moneda:mapa[tk].moneda, fecha:hoyCorta};
+    });
+    guardarPrecios(guardados);
+    pintarTodo();
     if(fallos) window.alert("No he podido actualizar "+fallos+" valor(es). Inténtalo en un momento.");
   });
 }
