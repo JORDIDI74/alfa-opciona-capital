@@ -953,6 +953,16 @@ function esNum(v){ return typeof v === "number" && isFinite(v); }
 function fmtEUR(v){ if(!esNum(v)) return "pendiente"; return v.toLocaleString("es-ES",{maximumFractionDigits:0}) + " €"; }
 function fmtPrecio(v){ if(!esNum(v)) return "pendiente"; return v.toLocaleString("es-ES",{minimumFractionDigits:2,maximumFractionDigits:2}) + " €"; }
 function fmtTitulos(v){ return esNum(v) ? v.toLocaleString("es-ES",{maximumFractionDigits:2}) : "?"; }
+var SIMBOLO={USD:"$",GBP:"£",CHF:"CHF",JPY:"¥",CAD:"CAD",SEK:"SEK",DKK:"DKK",NOK:"NOK"};
+/* Muestra el precio en euros y, si el valor cotiza en otra divisa, también el precio original.
+   Así se ve que 60,54 € viene de 68,91 $ y no parece un precio inventado. */
+function fmtDual(eur,orig,moneda){
+  var s=fmtPrecio(eur);
+  if(esNum(orig)&&moneda&&moneda!=="EUR"){
+    s+=" ("+orig.toLocaleString("es-ES",{minimumFractionDigits:2,maximumFractionDigits:2})+" "+(SIMBOLO[moneda]||moneda)+")";
+  }
+  return s;
+}
 function fmtPct(v){ var s=v.toLocaleString("es-ES",{minimumFractionDigits:1,maximumFractionDigits:1}); return (v>0?"+":"")+s+" %"; }
 function dosDig(n){ return (n<10?"0":"")+n; }
 function hoyISO(){ var d=new Date(); return d.getFullYear()+"-"+dosDig(d.getMonth()+1)+"-"+dosDig(d.getDate()); }
@@ -1150,8 +1160,8 @@ function pintarCartera(id){
       return '<div class="card pos">'+
         '<div class="pos-cab"><div><span class="pos-ticker">'+esc(p.ticker)+'</span> <span class="pos-nombre">'+esc(p.nombre||"")+'</span></div>'+
         '<div class="num" style="font-weight:700">'+fmtEUR(val!=null?Math.round(val):null)+'</div></div>'+
-        '<div class="pos-datos num"><span>'+fmtTitulos(p.titulos)+' títulos</span><span>Compra '+fmtPrecio(p.precioCompraEUR)+'</span>'+
-          '<span>Actual '+(esNum(p.precioActual)?fmtPrecio(p.precioActual)+(p.fechaPrecio?" ("+esc(p.fechaPrecio)+")":""):"pendiente")+'</span>'+
+        '<div class="pos-datos num"><span>'+fmtTitulos(p.titulos)+' títulos</span><span>Compra '+fmtDual(p.precioCompraEUR,p.precioCompraOrig,p.moneda)+'</span>'+
+          '<span>Actual '+(esNum(p.precioActual)?fmtDual(p.precioActual,p.precioActualOrig,p.moneda)+(p.fechaPrecio?" ("+esc(p.fechaPrecio)+")":""):"pendiente")+'</span>'+
           (plPct!=null?'<span class="chip '+(pl>=0?"up":"down")+'">'+(pl>=0?"▲ ":"▼ ")+fmtPct(plPct)+'</span>':'')+'</div>'+
         (esUsuario?('<div class="pos-acciones"><button class="btn-secundario" data-accion="vender" data-idx="'+idx+'">Vender a precio real</button></div>'):'')+
       '</div>';
@@ -1295,9 +1305,14 @@ inpNombre.addEventListener("keydown",function(e){ if(e.key==="Enter") empezarPar
    real de mercado. La orden se ejecuta SIEMPRE a la cotización del momento. */
 var FX_CACHE={};
 function urlYahoo(sym){ return "https://query1.finance.yahoo.com/v8/finance/chart/"+encodeURIComponent(sym)+"?range=1d&interval=1d"; }
-function viaProxy(u){ return "https://corsproxy.io/?"+encodeURIComponent(u); }
-function metaYahoo(sym){
-  return fetch(viaProxy(urlYahoo(sym)),{cache:"no-store"}).then(function(r){
+/* Varios proxies CORS en cadena: si uno falla o no trae precio válido, se prueba el siguiente. */
+var PROXIES=[
+  function(u){ return "https://corsproxy.io/?"+encodeURIComponent(u); },
+  function(u){ return "https://api.allorigins.win/raw?url="+encodeURIComponent(u); },
+  function(u){ return "https://api.codetabs.com/v1/proxy?quest="+encodeURIComponent(u); }
+];
+function metaDesde(u){
+  return fetch(u,{cache:"no-store"}).then(function(r){
     if(!r.ok) throw new Error("HTTP "+r.status);
     return r.json();
   }).then(function(j){
@@ -1305,6 +1320,15 @@ function metaYahoo(sym){
     if(!m||!esNum(m.regularMarketPrice)) throw new Error("sin precio");
     return m;
   });
+}
+function metaYahoo(sym){
+  var u=urlYahoo(sym), i=0;
+  function intento(){
+    if(i>=PROXIES.length) return Promise.reject(new Error("sin fuente de precios"));
+    var f=PROXIES[i++];
+    return metaDesde(f(u)).catch(function(){ return intento(); });
+  }
+  return intento();
 }
 function tasaAEur(moneda){
   if(!moneda||moneda==="EUR") return Promise.resolve(1);
@@ -1421,7 +1445,8 @@ function ejecutarCompra(){
   if(imp>USER.caja+0.5){ tradeError.textContent="No tienes caja suficiente."; return; }
   var titulos=imp/pr;
   USER.posiciones.push({ ticker:d.ticker, nombre:d.nombre||d.cot.nombre||"", titulos:titulos,
-    precioCompraEUR:pr, costeEUR:imp, precioActual:pr, fechaPrecio:fechaCorta(hoyISO()) });
+    precioCompraEUR:pr, costeEUR:imp, precioActual:pr, fechaPrecio:fechaCorta(hoyISO()),
+    moneda:d.cot.moneda, precioCompraOrig:d.cot.precioOrig, precioActualOrig:d.cot.precioOrig });
   USER.caja-=imp;
   USER.movimientos.push({ fecha:hoyISO(), tipo:"compra", ticker:d.ticker, titulos:titulos, precioEUR:pr, importeEUR:imp,
     motivo:"Compra al precio real de mercado." });
@@ -1450,7 +1475,10 @@ function actualizarPrecios(){
   if(btn){ btn.disabled=true; btn.textContent="Actualizando precios…"; }
   var tareas=USER.posiciones.map(function(p){
     return cotizacionReal(p.ticker).then(function(c){
-      p.precioActual=c.precioEUR; p.fechaPrecio=fechaCorta(hoyISO()); return true;
+      p.precioActual=c.precioEUR; p.fechaPrecio=fechaCorta(hoyISO());
+      p.moneda=c.moneda; p.precioActualOrig=c.precioOrig;
+      if(p.precioCompraOrig==null && esNum(p.precioCompraEUR) && esNum(c.tasa) && c.tasa>0) p.precioCompraOrig=p.precioCompraEUR/c.tasa;
+      return true;
     }).catch(function(){ return false; });
   });
   Promise.all(tareas).then(function(res){
