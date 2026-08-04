@@ -452,7 +452,7 @@ footer{
   <section class="panel activo" id="panel-clasificacion" role="tabpanel" aria-labelledby="tab-clasificacion">
     <p class="eyebrow" id="eyebrow-temporada">Temporada 2026–27 · Mes 0 de 12</p>
     <h1 class="titulo" id="titulo-clasificacion">Parrilla de salida</h1>
-    <p class="sub" id="sub-clasificacion">Tres carteras, un método, doce meses. Cada jugador arranca con 500.000&nbsp;€ y un máximo de 10 valores.</p>
+    <p class="sub" id="sub-clasificacion">Tres carteras, un método, doce meses. Cada jugador arranca con 500.000&nbsp;€ y un máximo de 10 valores — salvo Tesis Mensuales, que no tiene tope.</p>
 
     <div id="accion-jugador"><!-- JS: barra "juegas como…" con Comprar / Cambiar --></div>
 
@@ -616,8 +616,8 @@ footer{
       <h3 style="font-size:16px; margin-bottom:12px">Reglas de juego</h3>
       <div class="regla-lista">
         <div class="regla"><span class="icono num">€</span><span><b>500.000&nbsp;€ de capital inicial</b> por jugador. Dinero ficticio: es un juego de aprendizaje.</span></div>
-        <div class="regla"><span class="icono num">10</span><span><b>Máximo 10 valores</b> en cartera por jugador, en todo momento.</span></div>
-        <div class="regla"><span class="icono num">€</span><span><b>Tamaño de la posición:</b> Tesis Mensuales compra <b>50.000&nbsp;€ por valor</b> — sus 10 valores el día de la tesis, invirtiendo los 500.000&nbsp;€ completos. Claude y cada jugador fijan su propio tamaño.</span></div>
+        <div class="regla"><span class="icono num">10</span><span><b>Máximo 10 valores</b> en cartera, en todo momento. <b>Única excepción: Tesis Mensuales</b>, que no tiene tope porque cada mes entran las tesis nuevas.</span></div>
+        <div class="regla"><span class="icono num">€</span><span><b>Tamaño de la posición:</b> Tesis Mensuales reparte <b>a partes iguales entre todas sus tesis</b>: al llegar las del mes, vende la parte proporcional de cada valor que ya tiene para que todos pesen lo mismo, y sigue con la caja a cero. Claude y cada jugador fijan su propio tamaño.</span></div>
         <div class="regla"><span class="icono">↧</span><span><b>Cuándo entrar:</b> lo marca el <b>primer suelo</b> (primer soporte) del análisis de momentum.</span></div>
         <div class="regla"><span class="icono">✓</span><span><b>Precios reales, sin trampas:</b> toda orden se ejecuta a la <b>cotización real del mercado</b> en ese momento. No se puede comprar por debajo ni vender por encima del precio real.</span></div>
         <div class="regla"><span class="icono num">12</span><span><b>12 meses de competición.</b> Foto mensual el último día hábil de cada mes; gana quien tenga el mayor valor total (posiciones + caja).</span></div>
@@ -725,7 +725,7 @@ footer{
       "id": "tesis",
       "nombre": "Tesis Mensuales",
       "alias": "LA CASA",
-      "descripcion": "Juega las tesis predefinidas que se entregan cada mes. Cada valor entra con 50.000 €. Disciplina pura: sin improvisación.",
+      "descripcion": "Juega las tesis que Jorge entrega cada mes. Al llegar las nuevas, vende la parte proporcional de las que ya tiene para que TODAS pesen lo mismo. Sin tope de valores y siempre con la caja a cero: disciplina pura, sin improvisación.",
       "caja": 0.0,
       "posiciones": [
         {
@@ -848,7 +848,8 @@ footer{
           "precioCompraOrig": 90.42,
           "precioActualOrig": 94.14
         }
-      ]
+      ],
+      "sinTope": true
     },
     {
       "id": "claude",
@@ -1209,6 +1210,14 @@ footer{
 var ESTADO = JSON.parse(document.getElementById("estado-juego").textContent);
 var JUEGO = ESTADO.juego;
 var BENCH = ESTADO.benchmarks || ESTADO.jugadores || [];
+
+/* Tesis Mensuales no tiene tope de valores: cada mes entran las tesis nuevas y la
+   cartera se reparte a partes iguales entre todas. El resto sigue con el máximo de 10. */
+function sinTope(j){ return !!(j && j.sinTope); }
+function cuentaPos(j){
+  var n=(j && j.posiciones ? j.posiciones.length : 0);
+  return sinTope(j) ? String(n) : n+"/"+JUEGO.maxPosiciones;
+}
 var LS_KEY = "alfa-opciona-user-v1";
 var LS_PRECIOS = "alfa-opciona-precios-v1";
 var COLORES = { tesis:"var(--c-tesis)", claude:"var(--c-claude)", user:"var(--c-jorge)" };
@@ -1424,7 +1433,7 @@ function pintarCartera(id){
       '<div class="stat"><div class="k">Valor total'+(v.pendiente?' (con pendientes)':'')+'</div><div class="v num">'+fmtEUR(Math.round(v.total))+'</div></div>'+
       '<div class="stat"><div class="k">Rentabilidad</div><div class="v num" style="color:'+(ret>0.05?"var(--up)":ret<-0.05?"var(--down)":"var(--ink)")+'">'+fmtPct(ret)+'</div></div>'+
       '<div class="stat"><div class="k">Caja</div><div class="v num">'+fmtEUR(Math.round(j.caja))+'</div></div>'+
-      '<div class="stat"><div class="k">Posiciones</div><div class="v num">'+(j.posiciones||[]).length+'/'+JUEGO.maxPosiciones+'</div></div>'+
+      '<div class="stat"><div class="k">Posiciones</div><div class="v num">'+cuentaPos(j)+'</div></div>'+
     '</div>'+
     '<div class="barra" role="img" aria-label="Reparto entre inversión y caja">'+
       (v.invertido>0?'<i style="width:'+(v.invertido/v.total*100)+'%; background:'+c+'"></i>':'')+
@@ -1481,7 +1490,7 @@ function pintarTodo(){
   document.getElementById("titulo-clasificacion").textContent = (!esPretemporada||USER) ? "Clasificación" : "Parrilla de salida";
   document.getElementById("sub-clasificacion").textContent = (!esPretemporada||USER)
     ? "Valor total actual de cada cartera (posiciones + caja). Gana quien más lejos llegue en doce meses."
-    : "Tres carteras, un método, doce meses. Cada jugador arranca con 500.000 € y puede tener, como mucho, 10 valores.";
+    : "Tres carteras, un método, doce meses. Cada jugador arranca con 500.000 € y puede tener, como mucho, 10 valores — salvo Tesis Mensuales, sin tope.";
 
   /* barra de acción del jugador humano: quién juega + comprar + cambiar */
   var accion=document.getElementById("accion-jugador");
@@ -1516,7 +1525,7 @@ function pintarTodo(){
         '<div class="jvalor num">'+fmtEUR(Math.round(r.total))+(r.pendiente?' <span style="font-size:13px;color:var(--ink-3)">(hay precios pendientes)</span>':'')+'</div>'+
         '<div class="chips"><span class="chip num '+clase+'">'+(clase==="up"?"▲ ":clase==="down"?"▼ ":"")+fmtPct(ret)+'</span>'+
           '<span class="chip num">Caja '+Math.round(r.j.caja/r.total*100)+' %</span>'+
-          '<span class="chip num">'+(r.j.posiciones||[]).length+'/'+JUEGO.maxPosiciones+' valores</span></div>'+
+          '<span class="chip num">'+cuentaPos(r.j)+' valores</span></div>'+
       '</article>'));
   });
   if(resumen.every(function(r){return r.total===resumen[0].total;})){
