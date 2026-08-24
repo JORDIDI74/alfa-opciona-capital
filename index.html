@@ -810,6 +810,8 @@ function fotosCombinadas(){
     base.forEach(function(f){ if(mapU[f.mes]!=null) f.valores.user=mapU[f.mes]; });
     (USER.fotos||[]).forEach(function(x){ if(!base.some(function(f){return f.mes===x.mes;})) base.push({ mes:x.mes, valores:{ user:x.valor } }); });
     base.sort(function(a,b){ return a.mes<b.mes?-1:(a.mes>b.mes?1:0); });
+    /* Todo jugador sale con el capital inicial: sin este ancla, su serie nacería en su valor actual. */
+    if(base.length && !esNum(base[0].valores.user)) base[0].valores.user=JUEGO.capitalInicial;
   }
   return base;
 }
