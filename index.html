@@ -993,7 +993,7 @@ function pintarTodo(){
   /* cabecera */
   document.getElementById("pill-estado").textContent = USER ? "En juego" : (esPretemporada ? "Pretemporada" : ("Mes "+Math.max(0,fotos.length-1)+" de "+JUEGO.duracionMeses));
   var ultima=fotos[fotos.length-1];
-  document.getElementById("pie-actualizado").textContent = "Actualizado el "+(ultima?fechaCorta(ultima.fecha):"")+" · Fuente de precios: Yahoo Finance (cuando hay posiciones)";
+  document.getElementById("pie-actualizado").textContent = "Actualizado el "+(ultima?fechaCorta(ultima.fecha):"")+" · Fuente de precios: Google Finance y Yahoo Finance, vía el servicio de cotizaciones de la casa";
   document.getElementById("eyebrow-temporada").textContent = "Temporada 2026–27 · Mes "+Math.max(0,fotos.length-1)+" de "+JUEGO.duracionMeses;
   document.getElementById("titulo-clasificacion").textContent = (!esPretemporada||USER) ? "Clasificación" : "Parrilla de salida";
   document.getElementById("sub-clasificacion").textContent = (!esPretemporada||USER)
@@ -1109,47 +1109,86 @@ inpNombre.addEventListener("keydown",function(e){ if(e.key==="Enter") empezarPar
 /* ====== cotización real: obligatoria para operar ====== */
 /* Regla del juego: no se puede comprar por debajo ni vender por encima del precio
    real de mercado. La orden se ejecuta SIEMPRE a la cotización del momento. */
-var FX_CACHE={};
-function urlYahoo(sym){ return "https://query1.finance.yahoo.com/v8/finance/chart/"+encodeURIComponent(sym)+"?range=1d&interval=1d"; }
-/* Varios proxies CORS en cadena: si uno falla o no trae precio válido, se prueba el siguiente. */
-var PROXIES=[
-  function(u){ return "https://corsproxy.io/?"+encodeURIComponent(u); },
-  function(u){ return "https://api.allorigins.win/raw?url="+encodeURIComponent(u); },
-  function(u){ return "https://api.codetabs.com/v1/proxy?quest="+encodeURIComponent(u); }
-];
-function metaDesde(u){
-  return fetch(u,{cache:"no-store"}).then(function(r){
+/* Fuente de precios (26-ago-2026): el microservicio propio de cotizaciones, el
+   mismo que alimenta los CRM de IKIGAI, KAIZEN, Bajo el Radar y CADE, por su
+   puerta pública de solo lectura. Antes se pedían a Yahoo a través de tres
+   intermediarios gratuitos de terceros y los tres dejaron de servir a la vez
+   (uno pasó a ser de pago, dos se cayeron): como ninguna petición tenía reloj,
+   el botón de actualizar se quedaba colgado en «Actualizando precios…» para
+   siempre, sin actualizar ni avisar. Ahora todas las peticiones llevan reloj y,
+   si la fuente no contesta, se dice en pantalla. */
+var API_PRECIOS = "https://cotizaciones-api-production-5685.up.railway.app/pub/prices";
+var ESPERA_MS = 15000;
+var MAX_POR_LLAMADA = 30;   /* el mismo tope que acepta el servicio */
+
+function conReloj(url, ms){
+  var ac = (typeof AbortController!=="undefined") ? new AbortController() : null;
+  var to = setTimeout(function(){ if(ac) ac.abort(); }, ms||ESPERA_MS);
+  var op = {cache:"no-store"}; if(ac) op.signal=ac.signal;
+  return fetch(url, op).then(function(r){
+    clearTimeout(to);
     if(!r.ok) throw new Error("HTTP "+r.status);
     return r.json();
-  }).then(function(j){
-    var m=j&&j.chart&&j.chart.result&&j.chart.result[0]&&j.chart.result[0].meta;
-    if(!m||!esNum(m.regularMarketPrice)) throw new Error("sin precio");
-    return m;
+  }, function(e){ clearTimeout(to); throw e; });
+}
+
+/* Precios de varios valores en una sola llamada → { TICKER: precio|null } */
+function preciosDelServicio(tickers){
+  var lista=[]; (tickers||[]).forEach(function(t){ if(t && lista.indexOf(t)<0) lista.push(t); });
+  if(!lista.length) return Promise.resolve({});
+  var trozos=[]; for(var i=0;i<lista.length;i+=MAX_POR_LLAMADA) trozos.push(lista.slice(i,i+MAX_POR_LLAMADA));
+  return Promise.all(trozos.map(function(tr){
+    return conReloj(API_PRECIOS+"?tickers="+encodeURIComponent(tr.join(",")))
+      .then(function(j){ return (j&&j.prices)||{}; });
+  })).then(function(partes){
+    var out={}; partes.forEach(function(p){ Object.keys(p).forEach(function(k){ out[k]=p[k]; }); });
+    return out;
   });
 }
-function metaYahoo(sym){
-  var u=urlYahoo(sym), i=0;
-  function intento(){
-    if(i>=PROXIES.length) return Promise.reject(new Error("sin fuente de precios"));
-    var f=PROXIES[i++];
-    return metaDesde(f(u)).catch(function(){ return intento(); });
+
+/* Divisa de un valor nuevo. No se adivina: sale de una regla explícita (la bolsa
+   que indica el sufijo del ticker) o de la divisa con la que ese valor ya cotiza
+   en el juego, y en el momento de confirmar la orden se le enseña al jugador de
+   dónde ha salido, para que pueda cancelar si no le cuadra. */
+var DIVISA_POR_BOLSA = {PA:"EUR",BR:"EUR",DE:"EUR",F:"EUR",MC:"EUR",MI:"EUR",AS:"EUR",LS:"EUR",HE:"EUR",
+  L:"GBP",SW:"CHF",VX:"CHF",TO:"CAD",T:"JPY",HK:"HKD",ST:"SEK",CO:"DKK",OL:"NOK"};
+function divisaDe(tk){
+  var yaEnJuego=null;
+  todasLasPosiciones().forEach(function(q){ if(!yaEnJuego && q.ticker===tk && q.moneda) yaEnJuego=q.moneda; });
+  if(yaEnJuego) return {moneda:yaEnJuego, origen:"la divisa con la que ya cotiza en el juego"};
+  var i=tk.lastIndexOf(".");
+  if(i>0){
+    var suf=tk.slice(i+1).toUpperCase();
+    if(DIVISA_POR_BOLSA[suf]) return {moneda:DIVISA_POR_BOLSA[suf], origen:"la bolsa del sufijo ."+suf};
+    return null;
   }
-  return intento();
+  return {moneda:"USD", origen:"bolsa de EE. UU. (ticker sin sufijo)"};
 }
+
+var FX_CACHE={};
 function tasaAEur(moneda){
   if(!moneda||moneda==="EUR") return Promise.resolve(1);
   var c=FX_CACHE[moneda];
   if(c&&(Date.now()-c.ts)<600000) return Promise.resolve(c.tasa);
-  return metaYahoo(moneda+"EUR=X").then(function(m){
-    FX_CACHE[moneda]={tasa:m.regularMarketPrice,ts:Date.now()};
-    return m.regularMarketPrice;
+  var par=moneda+"EUR=X";
+  return preciosDelServicio([par]).then(function(p){
+    var t=p[par];
+    if(!esNum(t)||t<=0) throw new Error("sin tipo de cambio para "+moneda);
+    FX_CACHE[moneda]={tasa:t,ts:Date.now()};
+    return t;
   });
 }
+
 function cotizacionReal(ticker){
-  return metaYahoo(ticker).then(function(m){
-    return tasaAEur(m.currency).then(function(tasa){
-      return { ticker:(m.symbol||ticker), precioOrig:m.regularMarketPrice, moneda:(m.currency||"EUR"),
-               tasa:tasa, precioEUR:m.regularMarketPrice*tasa, nombre:(m.longName||m.shortName||"") };
+  var tk=String(ticker).trim().toUpperCase();
+  return preciosDelServicio([tk]).then(function(p){
+    var precio=p[tk];
+    if(!esNum(precio)||precio<=0) throw new Error("sin precio para "+tk);
+    var d=divisaDe(tk);
+    if(!d) throw new Error("no puedo confirmar la divisa de "+tk);
+    return tasaAEur(d.moneda).then(function(tasa){
+      return { ticker:tk, precioOrig:precio, moneda:d.moneda, tasa:tasa,
+               precioEUR:precio*tasa, nombre:"", origenDivisa:d.origen };
     });
   });
 }
@@ -1181,7 +1220,8 @@ function precioOrden(c){ return (c.moneda!=="EUR" && esNum(c.precioOrig)) ? fmtM
 function pintaCot(c, extra){
   tradeCot.innerHTML='<div class="cot-linea"><b>'+esc(c.ticker)+'</b> · precio real ahora: <b>'+precioOrden(c)+'</b>'+
     (c.moneda!=="EUR" ? ' <span class="cot-sub">('+fmtPrecio(c.precioEUR)+')</span>' : '')+
-    '</div><div class="cot-sub">'+extra+'</div>';
+    '</div><div class="cot-sub">'+extra+'</div>'+
+    ((c.moneda!=="EUR"&&c.origenDivisa)?'<div class="cot-sub">Cotiza en '+esc(c.moneda)+' según '+esc(c.origenDivisa)+'. Si no te cuadra, cancela.</div>':'');
 }
 
 function abrirTrade(accion,idx){
@@ -1318,28 +1358,45 @@ function actualizarPrecios(){
   if(!posis.length) return;
   var botones=[document.getElementById("btn-actualizar"), document.getElementById("cta-actualizar")].filter(Boolean);
   botones.forEach(function(b){ b.disabled=true; b.dataset.txt=b.textContent; b.textContent="Actualizando precios…"; });
+  function soltarBotones(){
+    botones.forEach(function(b){ b.disabled=false; if(b.dataset.txt) b.textContent=b.dataset.txt; });
+  }
   /* un ticker se consulta una sola vez aunque esté en varias carteras */
-  var tickers=[]; posis.forEach(function(p){ if(tickers.indexOf(p.ticker)<0) tickers.push(p.ticker); });
-  var mapa={}, fallos=0;
-  var tareas=tickers.map(function(tk){
-    return cotizacionReal(tk).then(function(c){ mapa[tk]=c; }).catch(function(){ fallos++; });
+  var tickers=[], monedas=[];
+  posis.forEach(function(p){
+    if(tickers.indexOf(p.ticker)<0) tickers.push(p.ticker);
+    var m=p.moneda||"EUR";
+    if(m!=="EUR" && monedas.indexOf(m)<0) monedas.push(m);
   });
-  Promise.all(tareas).then(function(){
-    var hoyCorta=fechaCorta(hoyISO());
+  var pares=monedas.map(function(m){ return m+"EUR=X"; });
+  preciosDelServicio(tickers.concat(pares)).then(function(mapa){
+    var tasas={EUR:1};
+    monedas.forEach(function(m){ var t=mapa[m+"EUR=X"]; if(esNum(t)&&t>0) tasas[m]=t; });
+    var hoyCorta=fechaCorta(hoyISO()), fallos=[];
     posis.forEach(function(p){
-      var c=mapa[p.ticker]; if(!c) return;
-      p.precioActual=c.precioEUR; p.precioActualOrig=c.precioOrig; p.moneda=c.moneda; p.fechaPrecio=hoyCorta;
-      if(p.precioCompraOrig==null && esNum(p.precioCompraEUR) && esNum(c.tasa) && c.tasa>0) p.precioCompraOrig=p.precioCompraEUR/c.tasa;
+      var precio=mapa[p.ticker], m=p.moneda||"EUR", tasa=tasas[m];
+      /* sin precio o sin tipo de cambio no se toca la posición: se conserva el
+         último precio bueno en vez de dejarla en blanco o mezclar divisas */
+      if(!esNum(precio)||precio<=0||!esNum(tasa)){ if(fallos.indexOf(p.ticker)<0) fallos.push(p.ticker); return; }
+      p.precioActualOrig=precio; p.precioActual=precio*tasa; p.fechaPrecio=hoyCorta;
+      if(p.precioCompraOrig==null && esNum(p.precioCompraEUR) && tasa>0) p.precioCompraOrig=p.precioCompraEUR/tasa;
     });
     /* guardar: la partida del usuario y los precios de las carteras de referencia */
     guardarUsuario();
     var guardados=cargarPrecios();
-    Object.keys(mapa).forEach(function(tk){
-      guardados[tk]={precioEUR:mapa[tk].precioEUR, precioOrig:mapa[tk].precioOrig, moneda:mapa[tk].moneda, fecha:hoyCorta};
+    posis.forEach(function(p){
+      if(esNum(p.precioActual) && p.fechaPrecio===hoyCorta){
+        guardados[p.ticker]={precioEUR:p.precioActual, precioOrig:p.precioActualOrig, moneda:p.moneda, fecha:hoyCorta};
+      }
     });
     guardarPrecios(guardados);
+    soltarBotones();
     pintarTodo();
-    if(fallos) window.alert("No he podido actualizar "+fallos+" valor(es). Inténtalo en un momento.");
+    if(fallos.length) window.alert("No he podido actualizar "+fallos.length+" valor(es): "+fallos.join(", ")+
+      ". El resto sí está al día; esos conservan su último precio conocido.");
+  }).catch(function(){
+    soltarBotones();
+    window.alert("Ahora mismo no hay conexión con la fuente de precios. Los que ves son los de la última actualización — vuelve a intentarlo en unos minutos.");
   });
 }
 
