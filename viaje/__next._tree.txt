@@ -1,0 +1,2 @@
+:HL["/alfa-opciona-capital/viaje/_next/static/chunks/0cptr0.1zheig.css","style"]
+0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}},"staleTime":300,"buildId":"dlBqoj9Z8vfzk8H-Gc7zg"}
