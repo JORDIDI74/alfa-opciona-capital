@@ -1,0 +1,19 @@
+{
+  "name": "Marshall Road Trip · Octubre 2026",
+  "short_name": "Marshall Trip",
+  "description": "Mapa interactivo del viaje en coche para ver a Marshall el 3 y el 10 de octubre de 2026.",
+  "lang": "es",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#07100c",
+  "theme_color": "#07100c",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any"
+    }
+  ]
+}

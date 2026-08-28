@@ -1,0 +1,88 @@
+name: CI
+
+on:
+  push:
+    paths:
+      - "marshall-road-trip/**"
+      - "Dockerfile"
+      - "railway.json"
+      - ".github/workflows/ci.yml"
+  pull_request:
+    paths:
+      - "marshall-road-trip/**"
+      - "Dockerfile"
+      - "railway.json"
+      - ".github/workflows/ci.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Lint, types and build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: marshall-road-trip
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci --no-audit --no-fund
+          else
+            npm install --no-audit --no-fund
+          fi
+
+      # The first run has no lockfile to install from, so it commits the one it
+      # just resolved. Every later build is reproducible from it.
+      - name: Commit the lockfile the first time it is generated
+        if: github.event_name == 'push'
+        run: |
+          if [ -n "$(git status --porcelain package-lock.json)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add package-lock.json
+            git commit -m "Añadir package-lock.json generado en CI"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
+
+      - run: npm run lint
+      # `next build` also emits next-env.d.ts, which tsc needs for the CSS
+      # module declarations, so the standalone typecheck runs after it.
+      - run: npm run build
+      - run: npm run typecheck
+
+  docker:
+    name: Image builds and serves
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build the image Railway will build
+        run: docker build -t marshall-road-trip .
+
+      # Same entrypoint Railway uses, on the port Railway injects.
+      - name: Boot it and smoke-test the routes
+        run: |
+          docker run -d --name trip -e PORT=8080 -p 8080:8080 marshall-road-trip
+          for _ in $(seq 1 40); do
+            if curl -fsS http://localhost:8080/api/health > /dev/null; then break; fi
+            sleep 2
+          done
+          curl -fsS http://localhost:8080/api/health
+          curl -fsS -o /tmp/page.html http://localhost:8080/
+          grep -q "MARSHALL" /tmp/page.html
+          grep -q "Itinerario" /tmp/page.html
+          curl -fsS -o /dev/null -D - http://localhost:8080/ | grep -i "content-security-policy"
+          docker rm -f trip
