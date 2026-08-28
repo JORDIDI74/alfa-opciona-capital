@@ -4,7 +4,40 @@ La aplicación (`marshall-road-trip/`) se sirve como contenedor. El `Dockerfile`
 y el `railway.json` están en la **raíz** del repositorio, así que el servicio de
 Railway funciona con la configuración por defecto (*Root Directory* = `/`).
 
-## Opción A · Conectar el repositorio (recomendada)
+## Opción A · Que lo despliegue Claude (recomendada)
+
+Claude no puede alcanzar `railway.com` desde su entorno: la política de red lo
+bloquea. Sí puede hacerlo el runner de GitHub Actions, así que el despliegue
+vive en `.github/workflows/deploy-railway.yml` y Claude lo lanza empujando a la
+rama, lee los logs y corrige si falla.
+
+Hace falta **un secreto, una vez**:
+
+1. En Railway → foto de perfil → **Account Settings → Tokens** → **New Token**.
+   Dale un nombre (`github-actions`) y elige el workspace donde quieras que viva
+   el proyecto. Copia el token: solo se muestra una vez.
+2. En GitHub → el repositorio → **Settings → Secrets and variables → Actions**
+   → **New repository secret**.
+   - *Name*: `RAILWAY_API_TOKEN`
+   - *Secret*: el token que acabas de copiar
+3. Avísale a Claude. A partir de ahí el workflow crea el proyecto y el servicio
+   si no existen, construye el `Dockerfile`, despliega y genera el dominio
+   público, y guarda el ID del proyecto en `.github/railway-project-id` para que
+   los despliegues siguientes reutilicen el mismo proyecto.
+
+Si prefieres crear tú el proyecto en Railway y darle solo acceso a ese, usa un
+**token de proyecto** (*Project Settings → Tokens*) y guárdalo como
+`RAILWAY_TOKEN` en lugar de `RAILWAY_API_TOKEN`. El workflow acepta los dos.
+
+Para forzar un despliegue sin cambiar código, basta con tocar
+`.github/deploy-trigger` y hacer push.
+
+### Revocarlo
+
+El token se revoca desde la misma pantalla de Railway donde se creó, y el
+secreto se borra en GitHub → *Settings → Secrets and variables → Actions*.
+
+## Opción B · Conectar el repositorio desde el panel
 
 1. En [railway.com](https://railway.com) → **New Project** →
    **Deploy from GitHub repo** → `JORDIDI74/alfa-opciona-capital`.
@@ -22,7 +55,7 @@ No hace falta ninguna variable de entorno. Dos son opcionales:
 | `NEXT_PUBLIC_SITE_URL` | URL canónica en las etiquetas Open Graph | se deduce de `RAILWAY_PUBLIC_DOMAIN` |
 | `NEXT_TELEMETRY_DISABLED` | telemetría de Next | ya viene a `1` en la imagen |
 
-## Opción B · CLI
+## Opción C · CLI en tu máquina
 
 ```bash
 npm i -g @railway/cli
