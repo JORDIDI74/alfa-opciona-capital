@@ -1,9 +1,15 @@
 import type { NextConfig } from "next";
 
-// The map only ever talks to itself and to the OpenStreetMap tile servers, so
-// the policy can stay tight. `unsafe-inline` is still required for scripts
-// (Next.js inlines its bootstrap payload) and for styles (Leaflet writes
-// `style` attributes on every pane and tile as it pans).
+// GitHub Pages sirve ficheros estáticos desde una subcarpeta, así que ese
+// destino necesita `output: "export"` y un basePath. Railway sirve el mismo
+// código como contenedor con `output: "standalone"`. Un único interruptor.
+const isStaticExport = process.env.PAGES_EXPORT === "1";
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+
+// El mapa solo habla consigo mismo y con los tiles de OpenStreetMap, así que la
+// política puede ser estrecha. `unsafe-inline` sigue haciendo falta para los
+// scripts (Next inyecta su arranque en línea) y para los estilos (Leaflet
+// escribe atributos `style` en cada panel y cada tile al desplazar el mapa).
 const contentSecurityPolicy = [
   "default-src 'self'",
   "base-uri 'self'",
@@ -33,15 +39,26 @@ const securityHeaders = [
   },
 ];
 
-const nextConfig: NextConfig = {
-  // Railway runs the app from a container: `standalone` emits a self-contained
-  // server plus only the node_modules it actually needs.
-  output: "standalone",
-  reactStrictMode: true,
-  poweredByHeader: false,
-  async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
-  },
-};
+const nextConfig: NextConfig = isStaticExport
+  ? {
+      // Un hosting estático no ejecuta nada nuestro: no hay servidor que ponga
+      // cabeceras, así que aquí no se declaran (Next las rechazaría).
+      output: "export",
+      basePath,
+      trailingSlash: true,
+      images: { unoptimized: true },
+      reactStrictMode: true,
+      poweredByHeader: false,
+    }
+  : {
+      // Railway arranca un contenedor: `standalone` emite un servidor
+      // autónomo con solo las dependencias que Next traza.
+      output: "standalone",
+      reactStrictMode: true,
+      poweredByHeader: false,
+      async headers() {
+        return [{ source: "/:path*", headers: securityHeaders }];
+      },
+    };
 
 export default nextConfig;

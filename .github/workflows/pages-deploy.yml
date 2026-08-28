@@ -1,0 +1,132 @@
+name: Publicar en GitHub Pages
+
+# Pages sirve este repositorio desde la raíz de `main`, donde vive la página de
+# ALFA. El viaje se publica como export estático dentro de `main:/viaje/`, sin
+# tocar `index.html` ni la configuración de Pages.
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude/audit-improve-railway-deploy-fl8t6z]
+    paths:
+      - "marshall-road-trip/**"
+      - ".github/workflows/pages-deploy.yml"
+      - ".github/pages-trigger"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pages-publish
+  cancel-in-progress: false
+
+env:
+  SITE_PATH: /alfa-opciona-capital/viaje
+
+jobs:
+  publish:
+    name: Exportar y publicar
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: source
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Instalar
+        working-directory: source/marshall-road-trip
+        run: npm ci --no-audit --no-fund
+
+      - name: Exportar el sitio estático
+        working-directory: source/marshall-road-trip
+        env:
+          PAGES_EXPORT: "1"
+          NEXT_TELEMETRY_DISABLED: "1"
+        run: |
+          # El healthcheck existe para Railway. `output: "export"` no admite
+          # route handlers dinámicos, así que fuera en esta variante.
+          rm -rf app/api
+          NEXT_PUBLIC_BASE_PATH="$SITE_PATH" npm run build
+          test -f out/index.html
+          echo "--- exportado ---"
+          ls out
+
+      - name: Traer main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: site
+
+      - name: Colocar el viaje en /viaje/
+        run: |
+          rm -rf site/viaje
+          mkdir -p site/viaje
+          cp -R source/marshall-road-trip/out/. site/viaje/
+          # Sin esto, Jekyll se come los directorios que empiezan por guion
+          # bajo y el sitio se queda sin los assets de Next (_next/).
+          touch site/.nojekyll
+          echo "index.html de ALFA intacto:"
+          git -C site status --porcelain index.html || true
+
+      - name: Publicar
+        working-directory: site
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A viaje .nojekyll
+          if git diff --cached --quiet; then
+            echo "Sin cambios que publicar."
+            exit 0
+          fi
+          git commit -m "Publicar Marshall Road Trip en /viaje/"
+          git push origin HEAD:main
+
+  verify:
+    name: Comprobar la URL pública
+    needs: publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Esperar a que Pages sirva la página
+        id: wait
+        run: |
+          URL="https://jordidi74.github.io${SITE_PATH}/"
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+          for i in $(seq 1 60); do
+            code=$(curl -s -o /tmp/p.html -w "%{http_code}" "$URL" || echo 000)
+            echo "intento $i -> $code"
+            if [ "$code" = "200" ] && grep -q "MARSHALL" /tmp/p.html; then
+              echo "Pages ya sirve la página."
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "::error::Pages no ha servido $URL a tiempo."
+          exit 1
+
+      - name: Comprobar que el mapa se dibuja en la URL pública
+        env:
+          SHOT: ${{ github.workspace }}/pages.png
+          SHOT_MOBILE: ${{ github.workspace }}/pages-mobile.png
+        run: |
+          mkdir -p /tmp/render && cd /tmp/render
+          npm init -y > /dev/null
+          npm install playwright --no-audit --no-fund
+          npx playwright install --with-deps chromium
+          cp "$GITHUB_WORKSPACE/.github/scripts/render-check.mjs" .
+          node render-check.mjs "${{ steps.wait.outputs.url }}"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: capturas-pages
+          path: |
+            pages.png
+            pages-mobile.png
+          if-no-files-found: warn
+
+      - name: URL
+        run: echo "PUBLICADO EN ${{ steps.wait.outputs.url }}"

@@ -10,6 +10,10 @@ const siteUrl =
     ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
     : null);
 
+// Vacío en Railway (el sitio cuelga de la raíz); "/alfa-opciona-capital/viaje"
+// cuando se publica como export estático en GitHub Pages.
+const prefix = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+
 const title = "Marshall Road Trip · Octubre 2026";
 const description =
   "Mapa interactivo a pantalla completa del viaje en coche para ver a Marshall el 3 y el 10 de octubre de 2026.";
@@ -19,11 +23,11 @@ export const metadata: Metadata = {
   title,
   description,
   applicationName: "Marshall Road Trip",
-  manifest: "/manifest.webmanifest",
+  manifest: `${prefix}/manifest.webmanifest`,
   icons: {
-    icon: "/favicon.svg",
-    shortcut: "/favicon.svg",
-    apple: "/favicon.svg",
+    icon: `${prefix}/favicon.svg`,
+    shortcut: `${prefix}/favicon.svg`,
+    apple: `${prefix}/favicon.svg`,
   },
   appleWebApp: {
     capable: true,

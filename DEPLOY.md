@@ -76,6 +76,28 @@ Si el healthcheck falla, los primeros sitios donde mirar son los *Deploy Logs*
 del servicio y que el *Root Directory* haya quedado en `/` (el `Dockerfile`
 copia desde `marshall-road-trip/`, no desde su propia carpeta).
 
+## Publicación en GitHub Pages
+
+Además del contenedor, la app se publica como **export estático** dentro del
+sitio de Pages que ya sirve este repositorio:
+
+- `https://jordidi74.github.io/alfa-opciona-capital/` → la página de ALFA (`index.html`, intacta)
+- `https://jordidi74.github.io/alfa-opciona-capital/viaje/` → el mapa del viaje
+
+Lo hace `.github/workflows/pages-deploy.yml` en cada push a la rama de trabajo:
+exporta con `PAGES_EXPORT=1` y `NEXT_PUBLIC_BASE_PATH=/alfa-opciona-capital/viaje`,
+copia el resultado a `main:/viaje/` y comprueba después, con un navegador real,
+que la URL pública dibuja el mapa.
+
+Dos cosas que conviene saber:
+
+- La página lleva `noindex`, que **sí** funciona ahí. El `robots.txt` **no**:
+  los buscadores solo leen el de la raíz del dominio, y esa raíz no es nuestra.
+- Es una URL pública. Cualquiera con el enlace ve las fechas y los números de
+  vuelo. Para quitarla basta con borrar `viaje/` de `main`.
+
+Para republicar sin tocar código: modifica `.github/pages-trigger` y haz push.
+
 ## Reproducir la imagen en local
 
 ```bash
