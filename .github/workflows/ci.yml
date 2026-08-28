@@ -85,4 +85,28 @@ jobs:
           grep -q "MARSHALL" /tmp/page.html
           grep -q "Itinerario" /tmp/page.html
           curl -fsS -o /dev/null -D - http://localhost:8080/ | grep -i "content-security-policy"
-          docker rm -f trip
+
+      # curl only proves the shell is served; the map is drawn on the client.
+      - name: Check the map draws in a real browser
+        env:
+          SHOT: ${{ github.workspace }}/map.png
+          SHOT_MOBILE: ${{ github.workspace }}/map-mobile.png
+        run: |
+          mkdir -p /tmp/render && cd /tmp/render
+          npm init -y > /dev/null
+          npm install playwright --no-audit --no-fund
+          npx playwright install --with-deps chromium
+          node "$GITHUB_WORKSPACE/.github/scripts/render-check.mjs" http://localhost:8080
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: capturas
+          path: |
+            map.png
+            map-mobile.png
+          if-no-files-found: warn
+
+      - name: Stop the container
+        if: always()
+        run: docker rm -f trip || true
