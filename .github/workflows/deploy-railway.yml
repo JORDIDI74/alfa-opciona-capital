@@ -50,6 +50,26 @@ jobs:
             echo "ready=true" >> "$GITHUB_OUTPUT"
           fi
 
+      # Sin credencial, el log tiene que decir POR QUÉ. Estas expresiones sólo
+      # revelan si el nombre está puesto o no, nunca su contenido.
+      - name: Diagnóstico de credenciales
+        if: steps.guard.outputs.ready != 'true'
+        run: |
+          echo "Nombres que acepta este workflow:"
+          echo "  secreto  RAILWAY_API_TOKEN : ${{ secrets.RAILWAY_API_TOKEN != '' }}"
+          echo "  secreto  RAILWAY_TOKEN     : ${{ secrets.RAILWAY_TOKEN != '' }}"
+          echo
+          echo "Confusiones habituales:"
+          echo "  VARIABLE RAILWAY_API_TOKEN : ${{ vars.RAILWAY_API_TOKEN != '' }}  (debe ir en Secrets, no en Variables)"
+          echo "  VARIABLE RAILWAY_TOKEN     : ${{ vars.RAILWAY_TOKEN != '' }}  (debe ir en Secrets, no en Variables)"
+          echo "  secreto  RAILWAY           : ${{ secrets.RAILWAY != '' }}"
+          echo "  secreto  RAILWAY_KEY       : ${{ secrets.RAILWAY_KEY != '' }}"
+          echo "  secreto  RAILWAY_API_KEY   : ${{ secrets.RAILWAY_API_KEY != '' }}"
+          echo
+          echo "Si todo sale en false, el secreto no llegó a guardarse en este"
+          echo "repositorio (Settings -> Secrets and variables -> Actions ->"
+          echo "pestaña Secrets -> New repository secret)."
+
       - uses: actions/setup-node@v4
         if: steps.guard.outputs.ready == 'true'
         with:
