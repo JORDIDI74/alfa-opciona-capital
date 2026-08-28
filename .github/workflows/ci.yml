@@ -96,7 +96,10 @@ jobs:
           npm init -y > /dev/null
           npm install playwright --no-audit --no-fund
           npx playwright install --with-deps chromium
-          node "$GITHUB_WORKSPACE/.github/scripts/render-check.mjs" http://localhost:8080
+          # Node resolves bare imports from the script's own directory, so the
+          # script has to sit next to the node_modules that holds Playwright.
+          cp "$GITHUB_WORKSPACE/.github/scripts/render-check.mjs" .
+          node render-check.mjs http://localhost:8080
 
       - uses: actions/upload-artifact@v4
         if: always()
