@@ -1,0 +1,97 @@
+name: Deploy a Railway
+
+# Se dispara con cada push a la rama de trabajo, que es la única forma de
+# lanzarlo desde fuera mientras el workflow no esté en la rama por defecto
+# (workflow_dispatch solo funciona desde main).
+on:
+  push:
+    branches: [claude/audit-improve-railway-deploy-fl8t6z]
+    paths:
+      - "marshall-road-trip/**"
+      - "Dockerfile"
+      - "railway.json"
+      - ".github/workflows/deploy-railway.yml"
+      - ".github/scripts/railway-deploy.sh"
+      - ".github/deploy-trigger"
+  workflow_dispatch:
+    inputs:
+      project_id:
+        description: "ID del proyecto de Railway (opcional; si se omite se reutiliza el guardado)"
+        required: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: railway-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Desplegar
+    runs-on: ubuntu-latest
+    env:
+      # Cualquiera de los dos sirve: token de proyecto o token de cuenta.
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      RAILWAY_API_TOKEN: ${{ secrets.RAILWAY_API_TOKEN }}
+      RAILWAY_PROJECT_ID: ${{ inputs.project_id }}
+      SERVICE: marshall-road-trip
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Comprobar que hay credencial
+        id: guard
+        run: |
+          if [ -z "$RAILWAY_TOKEN" ] && [ -z "$RAILWAY_API_TOKEN" ]; then
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Sin RAILWAY_TOKEN ni RAILWAY_API_TOKEN en los secretos del repositorio: no hay nada que desplegar todavía."
+            if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then exit 1; fi
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Sin credencial, el log tiene que decir POR QUÉ. Estas expresiones sólo
+      # revelan si el nombre está puesto o no, nunca su contenido.
+      - name: Diagnóstico de credenciales
+        if: steps.guard.outputs.ready != 'true'
+        run: |
+          echo "Nombres que acepta este workflow:"
+          echo "  secreto  RAILWAY_API_TOKEN : ${{ secrets.RAILWAY_API_TOKEN != '' }}"
+          echo "  secreto  RAILWAY_TOKEN     : ${{ secrets.RAILWAY_TOKEN != '' }}"
+          echo
+          echo "Confusiones habituales:"
+          echo "  VARIABLE RAILWAY_API_TOKEN : ${{ vars.RAILWAY_API_TOKEN != '' }}  (debe ir en Secrets, no en Variables)"
+          echo "  VARIABLE RAILWAY_TOKEN     : ${{ vars.RAILWAY_TOKEN != '' }}  (debe ir en Secrets, no en Variables)"
+          echo "  secreto  RAILWAY           : ${{ secrets.RAILWAY != '' }}"
+          echo "  secreto  RAILWAY_KEY       : ${{ secrets.RAILWAY_KEY != '' }}"
+          echo "  secreto  RAILWAY_API_KEY   : ${{ secrets.RAILWAY_API_KEY != '' }}"
+          echo
+          echo "Si todo sale en false, el secreto no llegó a guardarse en este"
+          echo "repositorio (Settings -> Secrets and variables -> Actions ->"
+          echo "pestaña Secrets -> New repository secret)."
+
+      - uses: actions/setup-node@v4
+        if: steps.guard.outputs.ready == 'true'
+        with:
+          node-version: "22"
+
+      - name: Instalar la CLI de Railway
+        if: steps.guard.outputs.ready == 'true'
+        run: npm install -g @railway/cli
+
+      - name: Desplegar
+        if: steps.guard.outputs.ready == 'true'
+        run: bash .github/scripts/railway-deploy.sh
+
+      # El ID del proyecto se guarda en la rama para que el siguiente despliegue
+      # reutilice el mismo proyecto en lugar de crear uno nuevo.
+      - name: Recordar el proyecto
+        if: steps.guard.outputs.ready == 'true' && github.event_name == 'push'
+        run: |
+          if [ -n "$(git status --porcelain .github/railway-project-id)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add .github/railway-project-id
+            git commit -m "Guardar el ID del proyecto de Railway"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
